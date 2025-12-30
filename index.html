@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教學設計輔助工具提詞器 Teaching Design Aids Prompt Builder (TDA Prompt Builder)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #020617; /* Slate 950 */
+            color: #e2e8f0; /* Slate 200 */
+            overflow-x: hidden;
+        }
+
+        /* Cyber Grid Background */
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200vw;
+            height: 200vh;
+            background-image: 
+                linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: grid-move 20s linear infinite;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        @keyframes grid-move {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); }
+        }
+
+        /* Vignette Effect */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 50%, #020617 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Scrollbar */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #0f172a; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+            border: 1px solid #06b6d4;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4; 
+        }
+
+        /* Holographic Gradient Animation */
+        @keyframes gradient-xy {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-holo {
+            background-size: 200% 200%;
+            animation: gradient-xy 3s ease infinite;
+        }
+
+        /* Text Glows */
+        .text-glow-cyan {
+            text-shadow: 0 0 5px rgba(6, 182, 212, 0.5), 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+        .text-glow-purple {
+            text-shadow: 0 0 5px rgba(168, 85, 247, 0.5), 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+
+        /* Tech Borders */
+        .tech-border {
+            position: relative;
+            background: rgba(15, 23, 42, 0.6); /* Slate 900 / 60% */
+            border: 1px solid rgba(6, 182, 212, 0.3); /* Cyan 500 / 30% */
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .tech-input {
+            background: rgba(30, 41, 59, 0.5); /* Slate 800 / 50% */
+            border: 1px solid #334155;
+            color: #ecfeff;
+            transition: all 0.3s ease;
+        }
+        .tech-input:focus {
+            border-color: #06b6d4;
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .mono {
+            font-family: 'Share Tech Mono', monospace;
+        }
+    </style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-white">
+    <!-- Background Elements -->
+    <div class="cyber-grid"></div>
+    <div class="vignette"></div>
+    
+    <div id="root"></div>
+
+    <!-- React Application Script -->
+    <script type="text/babel" data-type="module">
+        // FIX: Explicitly defined dependencies to ensure a singleton React instance
+        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        import { motion, AnimatePresence } from 'https://esm.sh/framer-motion@10.16.4?deps=react@18.2.0,react-dom@18.2.0';
+        import { 
+            BookOpen, 
+            Gamepad2, 
+            HeartHandshake, 
+            MessageCircle, 
+            FlaskConical, 
+            ChevronRight, 
+            ChevronLeft, 
+            Copy, 
+            CheckCircle, 
+            Wand2, 
+            Settings2, 
+            UserCircle, 
+            Sparkles, 
+            Save, 
+            RotateCcw,
+            Plus,
+            Trash2,
+            Monitor,
+            Bot,
+            Cpu, // Added CPU icon for extra tech feel
+            Zap,  // Added Zap icon
+            Accessibility // Added Accessibility icon
+        } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
+
+        // --- Components ---
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`rounded-2xl overflow-hidden tech-border ${className}`}>
+                {children}
+            </div>
+        );
+
+        const Label = ({ children }) => (
+            <label className="block text-sm font-bold text-cyan-300 mb-2 tracking-wide uppercase orbitron flex items-center gap-2">
+                <span className="w-1 h-4 bg-cyan-500 rounded-sm inline-block"></span>
+                {children}
+            </label>
+        );
+
+        const Input = (props) => (
+            <input 
+                className={`w-full px-4 py-3 rounded-xl outline-none tech-input ${props.className || ""}`}
+                {...props} 
+            />
+        );
+
+        const TextArea = (props) => (
+            <textarea 
+                className={`w-full px-4 py-3 rounded-xl outline-none tech-input min-h-[120px] ${props.className || ""}`}
+                {...props} 
+            />
+        );
+
+        const Select = ({ options, value, onChange, className = "" }) => (
+            <div className={`relative ${className}`}>
+                <select 
+                    value={value}
+                    onChange={onChange}
+                    className="w-full px-4 py-3 rounded-xl outline-none tech-input appearance-none cursor-pointer"
+                >
+                    {options.map(opt => (
+                        <option key={opt.value} value={opt.value} className="bg-slate-900 text-slate-200">{opt.label}</option>
+                    ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-500">
+                    <ChevronRight size={16} className="rotate-90" />
+                </div>
+            </div>
+        );
+
+        // --- Main Application ---
+
+        function App() {
+            const [step, setStep] = useState(1);
+            const [copied, setCopied] = useState(false);
+            
+            // Form State
+            const [formData, setFormData] = useState({
+                toolName: "",
+                category: "教學遊戲", // Default
+                subjectCategory: "語文", // Subject Category
+                subjectCustomInput: "", // Custom Subject Input
+                gameStyle: ["扭蛋機 (Gachapon)"], // Changed to Array for Multi-select
+                gameStyleCustomInput: "", // Custom Game Style Input
+                interactionType: ["3選1答案"], // Array for Multi-select
+                interactionCustomInput: "", // Custom Interaction Input
+                learningDiversity: [], // New: Learning Diversity Support
+                examples: [
+                    { text: "", level: "初階" },
+                    { text: "", level: "中階" },
+                    { text: "", level: "高階" } // Added High level default
+                ],
+                grade: "小學二年級 (P2)",
+                senLevel: "輕度 (Mild)",
+                purpose: "",
+                context: "",
+                value: ["堅毅"], // Changed to Array for Multi-select
+                rules: [`計分規則：努力獎勵型計分規則：
+每答對 1 題得 10 分（肯定學習成果），
+每答錯 1 次額外加 1 分（肯定勇於嘗試）。
+總分＝答對得分＋錯誤次數，
+讓「堅持到底」的努力也被看見！
+舉例：2 題全對，但共錯 6 次 → 得分＝20＋6＝26 分。學生的報告看到：
+🎉 恭喜你全部答對！
+能力得分：20 分
+努力嘗試：6 次
+總成就分：26 分`, ""]
+            });
+
+            // Options
+            const categories = [
+                { value: "教學工具", label: "📚 教學工具", icon: BookOpen },
+                { value: "教學遊戲", label: "🎮 教學遊戲", icon: Gamepad2 },
+                { value: "情緒支援", label: "❤️ 情緒支援", icon: HeartHandshake },
+                { value: "溝通輔助", label: "🗣️ 溝通輔助", icon: MessageCircle },
+                { value: "實驗模擬", label: "🧪 實驗模擬", icon: FlaskConical },
+            ];
+
+            const subjects = ["語文", "數學", "英文", "人文", "科學", "生活技能", "電腦", "班主任課", "其他"];
+
+            const gameStyles = [
+                "扭蛋機 (Gachapon)", 
+                "夾公仔機 (Claw Crane)", 
+                "老虎機 (Slot Machine)", 
+                "轉盤抽獎 (Spin Wheel)", 
+                "大富翁 / 骰子前進 (Board Game)", 
+                "寶箱 / 神秘禮盒 (Mystery Box)", 
+                "氣球戳破 (Pop the Balloon)", 
+                "投幣許願池 (Wishing Well)", 
+                "打地鼠 (Whack-a-Mole)", 
+                "接水果 (Catching Fruit)", 
+                "禮物盒 / 聖誕拆禮 (Gift Box)", 
+                "飲料機 / 自助點餐機 (Vending Machine)", 
+                "放天燈 / 孔明燈 (Sky Lantern)", 
+                "祈福牆 / 願望板 (Wish Wall)", 
+                "香爐 / 點香祈福 (Incense Offering)", 
+                "其他"
+            ];
+            
+            const interactionTypes = [
+                // 基礎題型
+                "3選1答案", 
+                "4選1答案", 
+                "多選題", 
+                "輸入文字 (Text Input)",
+                "找詞遊戲 (Word Search Puzzle)", // Added Word Search Puzzle
+                
+                // 操作與排序
+                "點擊 (Click)",
+                "拖拉物件 (Drag & Drop)",
+                "拖拉排序 (Drag & Drop Ordering)",
+                "連線題 (Connect the Dots)",
+                "圖詞配對 (Matching)",
+                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)",
+                "滑桿調節 / 數值控制 (Slider Control)",
+                "旋轉 / 放大物件",
+                
+                // 創作與藝術
+                "畫布繪圖 / 自由創作 (Drawing Canvas)",
+                "填色 / 上色 (Coloring)",
+                "拼圖 / 拼合碎片 (Jigsaw Puzzle)",
+                "角色換裝 / 文化服飾試穿 (Virtual Dress-Up)",
+                
+                // 模擬與探索
+                "物理模擬 (Physics Simulation)",
+                "模擬操作 (Simulation Control)",
+                "地圖探索 / 點擊探索 (Map Exploration)",
+                "隱藏物件尋找 (Hidden Object Game)",
+                "角色裝備 / 升級系統 (Inventory / Upgrade)",
+                
+                // 敘事與情境
+                "角色扮演 / 對話選擇 (Branching Dialogue)",
+                "情境選擇 → 後果反饋 (Moral Dilemma)",
+                "角色對話輪流朗讀 (Read-Aloud)",
+                "故事接龍 / 共創文本 (Collaborative Story)",
+                
+                // 多感官與其他
+                "手勢控制 / 感應器互動",
+                "音頻辨識 / 錄音互動",
+                "社交互動 / 分享成就",
+                "時間限制挑戰",
+                "其他"
+            ];
+
+            const learningDiversityOptions = [
+                { label: "簡化內容 (Simplify Content)", desc: "使用簡單詞彙、短句，避免冗長說明；一次只教一個概念。" },
+                { label: "多感官輸入 (Multi-sensory)", desc: "結合圖片、聲音、動作、觸覺等多管道刺激，提升理解與記憶。" },
+                { label: "結構化與重複 (Structure & Repetition)", desc: "提供清晰步驟、固定流程與反覆練習機會。" },
+                { label: "即時回饋與獎勵 (Instant Feedback)", desc: "每完成一步即給予肯定（聲音、動畫、貼紙等），增強動機。" },
+                { label: "視覺輔助 (Visual Aids)", desc: "使用圖卡、流程圖、顏色區分、大字體、高對比界面。" },
+                { label: "生活化內容 (Real-life Context)", desc: "教學連結日常生活（如購物、交通、衛生），提升實用性。" },
+                { label: "語音朗讀題目 (TTS Question - HK)", desc: "題目提供廣東話語音朗讀功能。" },
+                { label: "語音朗讀答案 (TTS Answer - HK)", desc: "答案提供廣東話語音朗讀功能。" },
+                { label: "視覺提示 (Visual Cues)", desc: "加入箭頭、色塊、進度條等視覺提示。" }
+            ];
+
+            const values = [
+                "堅毅", "尊重他人", "責任感", "國民身份認同", "承擔精神", 
+                "誠信", "仁愛", "守法", "同理心", "勤勞", "團結", "孝親"
+            ];
+
+            const grades = [
+                "小學一年級 (P1)", 
+                "小學二年級 (P2)", 
+                "小學三年級 (P3)", 
+                "小學四年級 (P4)", 
+                "小學五年級 (P5)", 
+                "小學六年級 (P6)", 
+                "中學一年級 (S1)", 
+                "中學二年級 (S2)", 
+                "中學三年級 (S3)", 
+                "中學四年級 (S4)", 
+                "中學五年級 (S5)", 
+                "中學六年級 (S6)"
+            ];
+
+            const difficultyLevels = [
+                { value: "初階", label: "初階" },
+                { value: "中階", label: "中階" },
+                { value: "高階", label: "高階" }
+            ];
+
+            // Logic to handle Rule changes
+            const handleRuleChange = (index, value) => {
+                const newRules = [...formData.rules];
+                newRules[index] = value;
+                setFormData({ ...formData, rules: newRules });
+            };
+
+            const addRule = () => {
+                setFormData({ ...formData, rules: [...formData.rules, ""] });
+            };
+
+            const removeRule = (index) => {
+                const newRules = formData.rules.filter((_, i) => i !== index);
+                setFormData({ ...formData, rules: newRules });
+            };
+
+            // Logic to handle Example changes
+            const handleExampleChange = (index, field, value) => {
+                const newExamples = [...formData.examples];
+                newExamples[index] = { ...newExamples[index], [field]: value };
+                setFormData({ ...formData, examples: newExamples });
+            };
+
+            const addExample = () => {
+                setFormData({ ...formData, examples: [...formData.examples, { text: "", level: "初階" }] });
+            };
+
+            const removeExample = (index) => {
+                const newExamples = formData.examples.filter((_, i) => i !== index);
+                setFormData({ ...formData, examples: newExamples });
+            };
+
+            // Generic Helper to toggle array selections
+            const toggleSelection = (field, item) => {
+                setFormData(prev => {
+                    const current = prev[field];
+                    if (current.includes(item)) {
+                        return { ...prev, [field]: current.filter(t => t !== item) };
+                    } else {
+                        return { ...prev, [field]: [...current, item] };
+                    }
+                });
+            };
+
+            // Generate the Master Prompt
+            const generatePrompt = () => {
+                const rulesList = formData.rules.filter(r => r.trim() !== "").map((r, i) => `${i + 1}. ${r}`).join("\n    ");
+                const examplesList = formData.examples.filter(ex => ex.text.trim() !== "").map((ex, i) => `* [${ex.level}] ${ex.text}`).join("\n    ");
+                const isGame = formData.category === "教學遊戲";
+                
+                // Determine the subject display string
+                const subject = formData.subjectCategory === "其他" ? formData.subjectCustomInput : formData.subjectCategory;
+
+                // Determine game style display string (Multi-select)
+                let styles = [...formData.gameStyle];
+                if (styles.includes("其他")) {
+                    styles = styles.filter(s => s !== "其他");
+                    if (formData.gameStyleCustomInput.trim()) {
+                        styles.push(formData.gameStyleCustomInput);
+                    }
+                }
+                const style = styles.length > 0 ? styles.join("、") : "未指定";
+                
+                // Determine the interaction display string (Multi-select)
+                let interactions = [...formData.interactionType];
+                if (interactions.includes("其他")) {
+                    interactions = interactions.filter(i => i !== "其他");
+                    if (formData.interactionCustomInput.trim()) {
+                        interactions.push(formData.interactionCustomInput);
+                    }
+                }
+                const interaction = interactions.length > 0 ? interactions.join("、") : "未指定";
+
+                // Determine Learning Diversity string
+                const diversityList = formData.learningDiversity.map(opt => {
+                    const option = learningDiversityOptions.find(o => o.label === opt);
+                    return `* **${opt}**：${option ? option.desc : ""}`;
+                }).join("\n    ");
+
+                // Determine Values string (Multi-select)
+                const valuesStr = formData.value.length > 0 ? formData.value.join("、") : "無";
+                
+                let prompt = `# 1. 角色設定 (Role)
+你是一位擁有 15 年經驗的「資深前端工程師」與「教育科技 (EdTech) UX 專家」。你擅長製作介面直觀、互動性高且符合無障礙設計的網頁應用程式。
+
+# 2. 專案參數配置 (Configuration)
+**請根據以下設定，構建程式的邏輯與內容：**
+
+* **工具名稱**：${formData.toolName || "[未命名工具]"}
+* **工具範疇**：${formData.category}
+* **科目**：${subject || "未指定"}
+${isGame ? `* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)` : ""}
+* **互動機制**：${interaction}
+${isGame ? `* **遊戲模式需求**：請生成 **三種遊戲模式**，每種模式需分開 **初階、中階、高階** 三種難度。` : ""}
+${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}` : ""}
+* **核心用途**：${formData.purpose || "尚未填寫用途"}
+* **目標學生年級**：${formData.grade}
+* **支援需求 (SEN Support)**：${formData.senLevel}
+    * *邏輯設定：「中度」需更多視覺輔助、少字多圖、詞彙簡單；「輕度」可包含較多文字說明。*
+* **照顧學習差異 (Learning Diversity Support)**：
+    ${diversityList || "無特殊設定"}
+* **生活情境設定**：${formData.context || "一般教室情境"}
+* **融入價值觀**：${valuesStr}
+* **具體規則與邏輯**：
+    ${rulesList || "無特殊規則"}
+
+# 3. 設計與教育原則 (Design & Pedagogical Principles)
+**請嚴格遵守以下 5 大原則：**
+
+1.  **🌈 視覺友善 (Visual Friendliness)**
+    * **風格**：可愛卡通、色彩明亮、大字體（Large Fonts）。
+    * **排版**：採用 "Bento Grid" (便當盒式佈局) 或 "Glassmorphism" (毛玻璃特效)。
+    * **原則**：Show, don't tell（用大圖示與清晰動畫代替冗長說明）。
+    * **RWD**：必須同時完美支援電腦（投影用）與平板（iPad 操作用）。
+
+2.  **🧠 認知支援 (Cognitive Support)**
+    * **即時反饋**：正確顯示 ✅ + 愉悅音效；錯誤顯示 ❌ + 溫和提示音。
+    * **容錯設計**：必須提供「撤銷 (Undo)」或「重試」按鈕。
+    * **步驟拆解**：將複雜任務分解為清晰的單一步驟。
+
+3.  **🌍 生活連結 (Real-life Context)**
+    * 情境設定需貼近學生生活（如：${formData.context || "日常生活"}）。
+    * 優先連結獨立生活技能（Social & Life Skills）。
+
+4.  **❤️ 情緒支持 (Emotional Support)**
+    * **成長型思維**：錯誤時**絕不責備**（顯示：「再試一次！」、「差一點點！」）。
+    * **正向增強**：任務完成時，給予強烈視覺回饋（如星星飛出、掌聲）。
+
+5.  **🛡️ 安全與價值觀 (Safety & Values)**
+    * **價值觀滲透**：在回饋或介面角落自然融入「${valuesStr}」的概念。
+`;
+
+                if (isGame) {
+                    prompt += `
+# 4. 智能教學邏輯 (AI Scaffolding Logic)
+**程式需內建以下三階回應機制，根據學生表現動態調整：**
+
+* **🟢 初階 (Level 1: Visual)**：一句話直球答案 + 核心 Emoji/圖片。（適用：剛開始或中度支援需求）
+* **🟡 進階 (Level 2: Logic)**：簡短解釋因果關係（兩句話內）。（適用：已掌握名詞）
+* **🔴 高階 (Level 3: Metacognition)**：解釋 + 引導反問（例如：「你可以問我...」）。（適用：表現優異者）
+
+# 5. 遊戲化結算系統 (Game Over & Report)
+當活動結束時，顯示「個別化報告」畫面：
+
+1.  **表現分析**：顯示總分，錯誤列表，常犯錯誤，已掌握的知識，給予一些建議（語氣溫和）。
+2.  **適性化建議 (Adaptive Recommendation)**：
+    * *錯誤率 > 40%*：建議「多練習初階，加油，你可以的」。
+    * *錯誤率 10-40%*：建議「做得很好，繼續穩固知識」。
+    * *錯誤率 < 10%*：建議「你是專家了！挑戰下一階吧！」。
+3.  **導航**：必須包含「重玩」與「返回主選單」按鈕。
+`;
+                }
+
+                const nextSectionNum = isGame ? 6 : 4;
+
+                prompt += `
+# ${nextSectionNum}. 技術規格 (Technical Stack)
+請生成一個完整的 **React Component** 或 **單一 HTML 檔案**，並包含以下技術實作：
+
+1.  **Core Framework**: React (Functional Components + Hooks).
+2.  **Styling**: Tailwind CSS (配色需活潑、高對比、護眼).
+3.  **Icons**: Lucide-React.
+4.  **Animation**: Framer Motion (所有點擊、切換、得分、進場都必須有流暢動畫).
+5.  **UI Library**: 使用 shadcn/ui 風格的組件設計.
+6.  **必備功能**:
+    * **🔊 語音功能**: 若實作 \`speak\` 函式，請將 \`lang\` 預設值設為 \`'zh-HK'\`。
+    * **🎉 慶祝特效**: 任務完成時觸發 canvas-confetti（特效只會觸發一次，重置後才會再次觸發）。
+    * **⬅️ 導航**: 左上方必須有一個顯眼的「返回主頁」按鈕。
+
+# 執行任務 (Execution)
+請根據上述配置，編寫完整的程式碼。程式碼需包含完整的 UI 佈局、邏輯處理${isGame ? "、以及上述的三階 AI 回應內容模擬" : ""}。`;
+
+                return prompt;
+            };
+
+            const handleCopy = () => {
+                const text = generatePrompt();
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                
+                // Ensure it's not visible but part of the DOM
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } catch (err) {
+                    console.error('Unable to copy', err);
+                }
+                
+                document.body.removeChild(textArea);
+            };
+
+            // --- Step Rendering ---
+
+            const renderStep1 = () => (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="col-span-1 md:col-span-2">
+                            <Label>1. 工具名稱 (Tool Name)</Label>
+                            <Input 
+                                placeholder="例如：快樂農場加法練習、課堂情緒溫度計..." 
+                                value={formData.toolName}
+                                onChange={(e) => setFormData({...formData, toolName: e.target.value})}
+                            />
+                        </div>
+
+                        <div>
+                            <Label>2. 工具範疇 (Category)</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat.value}
+                                        onClick={() => setFormData({...formData, category: cat.value})}
+                                        className={`flex items-center p-3 rounded-xl border transition-all ${
+                                            formData.category === cat.value 
+                                                ? 'border-cyan-500 bg-cyan-900/30 text-cyan-200 ring-1 ring-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                        }`}
+                                    >
+                                        <cat.icon size={20} className="mr-3" />
+                                        <span className="font-medium">{cat.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+           
+                            {/* Subject Selection - Moved to top level */}
+                            <div className="mt-6">
+                                <Label>3. 科目 (Subject)</Label>
+                                <Select 
+                                    options={subjects.map(s => ({value: s, label: s}))}
+                                    value={formData.subjectCategory}
+                                    onChange={(e) => setFormData({...formData, subjectCategory: e.target.value})}
+                                />
+                                {formData.subjectCategory === "其他" && (
+                                    <div className="mt-2">
+                                        <Input
+                                            placeholder="請輸入科目名稱..."
+                                            value={formData.subjectCustomInput}
+                                            onChange={(e) => setFormData({...formData, subjectCustomInput: e.target.value})}
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Game Style Selection - Only for "教學遊戲" */}
+                            {formData.category === "教學遊戲" && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }} 
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    className="mt-6 space-y-4"
+                                >
+                                    {/* Game Style */}
+                                    <div>
+                                        <Label>遊戲風格 (Game Style) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {gameStyles.map(style => (
+                                                <button
+                                                    key={style}
+                                                    onClick={() => toggleSelection('gameStyle', style)}
+                                                    className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
+                                                        formData.gameStyle.includes(style)
+                                                            ? 'border-pink-500 bg-pink-900/30 text-pink-200 ring-1 ring-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.3)]' 
+                                                            : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                                    }`}
+                                                >
+                                                    {style}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {formData.gameStyle.includes("其他") && (
+                                            <div className="mt-2">
+                                                <Input
+                                                    placeholder="請輸入遊戲風格 (例如：射擊遊戲、迷宮)..."
+                                                    value={formData.gameStyleCustomInput}
+                                                    onChange={(e) => setFormData({...formData, gameStyleCustomInput: e.target.value})}
+                                                    autoFocus
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Example Questions */}
+                                    <div>
+                                        <Label>範例題目 (Example Questions)</Label>
+                                        <div className="space-y-3">
+                                            {formData.examples.map((ex, index) => (
+                                                <div key={index} className="flex gap-2 items-center">
+                                                    <div className="flex-1">
+                                                        <Input 
+                                                            placeholder={`例如：蘋果是甚麼顏色？`}
+                                                            value={ex.text}
+                                                            onChange={(e) => handleExampleChange(index, 'text', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="w-28">
+                                                        <Select 
+                                                            options={difficultyLevels}
+                                                            value={ex.level}
+                                                            onChange={(e) => handleExampleChange(index, 'level', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => removeExample(index)}
+                                                        className="p-3 text-red-400 hover:text-red-300 hover:bg-red-900/30 border border-transparent hover:border-red-500/50 rounded-xl transition-colors"
+                                                        disabled={formData.examples.length === 1}
+                                                        title="移除範例"
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button 
+                                            onClick={addExample}
+                                            className="mt-3 text-sm font-bold text-cyan-400 hover:text-cyan-200 flex items-center px-4 py-2 rounded-lg hover:bg-cyan-900/30 border border-transparent hover:border-cyan-500/50 transition-all"
+                                        >
+                                            <Plus size={16} className="mr-1" /> 新增範例
+                                        </button>
+                                    </div>
+
+                                </motion.div>
+                            )}
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <Label>4. 目標年級 (Target Grade)</Label>
+                                <Select 
+                                    options={grades.map(g => ({value: g, label: g}))}
+                                    value={formData.grade}
+                                    onChange={(e) => setFormData({...formData, grade: e.target.value})}
+                                />
+                            </div>
+
+                            <div>
+                                <Label>5. 支援需求 (SEN Support)</Label>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <button
+                                        onClick={() => setFormData({...formData, senLevel: "輕度 (Mild)"})}
+                                        className={`p-4 rounded-xl border text-left transition-all ${
+                                            formData.senLevel === "輕度 (Mild)" 
+                                                ? 'border-emerald-500 bg-emerald-900/30 text-emerald-200 ring-1 ring-emerald-500' 
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                        }`}
+                                    >
+                                        <div className="font-bold orbitron tracking-wide">輕度需求 (Mild)</div>
+                                        <div className="text-xs opacity-70 mt-1">適合一般理解力，可包含較多文字說明與引導。</div>
+                                    </button>
+                                    <button
+                                        onClick={() => setFormData({...formData, senLevel: "中度 (Moderate)"})}
+                                        className={`p-4 rounded-xl border text-left transition-all ${
+                                            formData.senLevel === "中度 (Moderate)" 
+                                                ? 'border-orange-500 bg-orange-900/30 text-orange-200 ring-1 ring-orange-500' 
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                        }`}
+                                    >
+                                        <div className="font-bold orbitron tracking-wide">中度需求 (Moderate)</div>
+                                        <div className="text-xs opacity-70 mt-1">需要高強度視覺輔助，少字多圖，詞彙簡單直接。</div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 6. Learning Diversity Support - New Section */}
+                            <div>
+                                <Label>6. 照顧學習差異 (Learning Diversity) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    {learningDiversityOptions.map(opt => (
+                                        <button
+                                            key={opt.label}
+                                            onClick={() => toggleSelection('learningDiversity', opt.label)}
+                                            className={`p-3 rounded-lg text-sm font-medium transition-all border text-left flex flex-col gap-1 h-full ${
+                                                formData.learningDiversity.includes(opt.label)
+                                                ? 'border-cyan-500 bg-cyan-900/30 text-cyan-200 ring-1 ring-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                            }`}
+                                        >
+                                            <span className="font-bold">{opt.label}</span>
+                                            <span className="text-xs opacity-70 font-light">{opt.desc}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 7. Interaction Mechanism - Renumbered to 7 */}
+                        <div className="col-span-1 md:col-span-2 pt-4 border-t border-slate-800/50">
+                             <Label>7. 互動機制 (Interaction) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                               {interactionTypes.map(type => (
+                                 <button
+                                   key={type}
+                                   onClick={() => toggleSelection('interactionType', type)}
+                                   className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
+                                     formData.interactionType.includes(type)
+                                     ? 'border-violet-500 bg-violet-900/30 text-violet-200 ring-1 ring-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]' 
+                                     : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                   }`}
+                                 >
+                                   {type}
+                                 </button>
+                               ))}
+                             </div>
+                             {formData.interactionType.includes("其他") && (
+                               <div className="mt-2">
+                                 <Input
+                                   placeholder="請輸入互動方式 (例如：連連看、填空)..."
+                                   value={formData.interactionCustomInput}
+                                   onChange={(e) => setFormData({...formData, interactionCustomInput: e.target.value})}
+                                   autoFocus
+                                 />
+                               </div>
+                             )}
+                        </div>
+                    </div>
+                </motion.div>
+            );
+
+            const renderStep2 = () => (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                    <div>
+                        <Label>5. 核心用途 (Core Purpose)</Label>
+                        <div className="text-xs text-slate-400 mb-2">請簡述這個工具要解決什麼問題？</div>
+                        <TextArea 
+                            placeholder="例如：讓學生透過拖放蘋果來練習 10 以內的加法，或是幫助自閉症學生指認當下的情緒..." 
+                            value={formData.purpose}
+                            onChange={(e) => setFormData({...formData, purpose: e.target.value})}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <Label>6. 生活情境設定 (Context)</Label>
+                            <Input 
+                                placeholder="例如：超級市場購物、搭乘地鐵、種植花朵..." 
+                                value={formData.context}
+                                onChange={(e) => setFormData({...formData, context: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <Label>7. 融入價值觀 (Values) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                {values.map(val => (
+                                    <button
+                                        key={val}
+                                        onClick={() => toggleSelection('value', val)}
+                                        className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
+                                            formData.value.includes(val)
+                                            ? 'border-yellow-500 bg-yellow-900/30 text-yellow-200 ring-1 ring-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' 
+                                            : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                        }`}
+                                    >
+                                        {val}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            );
+
+            const renderStep3 = () => (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                    <div>
+                        <Label>8. 具體規則與邏輯 (Rules)</Label>
+                        <div className="text-xs text-slate-400 mb-2">請列出這個工具必須遵守的規則（例如：計分方式、匯入功能等）。</div>
+                        
+                        <div className="space-y-3">
+                            {formData.rules.map((rule, index) => (
+                                <div key={index} className="flex gap-2">
+                                    <div className="flex-none pt-3 text-cyan-500 font-bold text-sm w-6 orbitron">
+                                        {index + 1}.
+                                    </div>
+                                    <TextArea 
+                                        value={rule} 
+                                        onChange={(e) => handleRuleChange(index, e.target.value)}
+                                        placeholder={`規則 ${index + 1} (例如：答錯時要播放提示音)`}
+                                        className="min-h-[80px]"
+                                    />
+                                    <button 
+                                        onClick={() => removeRule(index)}
+                                        className="flex-none p-3 text-red-400 hover:text-red-300 hover:bg-red-900/30 border border-transparent hover:border-red-500/50 rounded-xl transition-colors h-12 mt-1"
+                                        disabled={formData.rules.length === 1}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <button 
+                            onClick={addRule}
+                            className="mt-3 text-sm font-bold text-cyan-400 hover:text-cyan-200 flex items-center px-4 py-2 rounded-lg hover:bg-cyan-900/30 border border-transparent hover:border-cyan-500/50 transition-all"
+                        >
+                            + 新增一條規則
+                        </button>
+                    </div>
+                </motion.div>
+            );
+
+            const renderStep4 = () => (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
+                    <div className="bg-slate-900/50 border border-cyan-500/30 p-6 rounded-2xl flex items-start gap-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+                        <div className="p-3 bg-cyan-900/30 rounded-full shadow-sm text-cyan-400 border border-cyan-500/50">
+                            <Sparkles size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-cyan-100 orbitron tracking-wide">提詞已生成！</h3>
+                            <p className="text-cyan-200/70 text-sm mt-1">
+                                請點擊下方按鈕複製，然後貼給 AI。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <textarea 
+                            readOnly
+                            value={generatePrompt()}
+                            className="w-full h-80 bg-slate-950 text-cyan-300 font-mono text-xs p-6 rounded-2xl outline-none resize-none leading-relaxed border border-slate-800 shadow-inner"
+                        />
+                        <button 
+                            onClick={handleCopy}
+                            className="absolute top-4 right-4 bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                        >
+                            {copied ? <CheckCircle size={16} className="text-green-400" /> : <Copy size={16} />}
+                            {copied ? "已複製！" : "複製內容"}
+                        </button>
+                    </div>
+                </motion.div>
+            );
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 relative z-10">
+                    <div className="max-w-3xl mx-auto pb-20"> {/* pb-20 for footer spacing */}
+                        
+                        {/* Header */}
+                        <header className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-start justify-between gap-4">
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-black flex items-start gap-3 justify-center md:justify-start">
+                                    <span className="text-4xl filter drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">🤖</span> {/* Robot Emoji */}
+                                    <div className="flex flex-col">
+                                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 drop-shadow-sm font-black tracking-wide text-glow-cyan text-xl md:text-2xl">
+                                            教學設計輔助工具提詞器
+                                        </span>
+                                        <span className="font-['Orbitron'] bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 drop-shadow-sm tracking-wider text-lg md:text-xl font-bold mt-1">
+                                            Teaching Design Aids Prompt Builder
+                                        </span>
+                                        <span className="text-base md:text-lg text-cyan-500 font-bold font-['Orbitron'] tracking-[0.2em] mt-1 opacity-80">
+                                            [ TDA Prompt Builder ]
+                                        </span>
+                                    </div>
+                                </h1>
+                                <p className="text-slate-400 mt-3 font-medium pl-0 md:pl-[3.5rem] flex items-center gap-2">
+                                    <Zap size={16} className="text-yellow-400" />
+                                    3 分鐘設計專屬教材：輸入需求，自動生成工程師級的開發指令。
+                                </p>
+                            </div>
+                            <div className="hidden md:block mt-2">
+                                <div className="px-4 py-2 rounded-full border border-cyan-500/50 bg-cyan-950/30 text-sm font-bold text-cyan-400 flex items-center gap-2 shadow-[0_0_10px_rgba(6,182,212,0.2)] orbitron tracking-wider">
+                                    <Bot size={16} />
+                                    v1.0
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* Progress Bar */}
+                        <div className="mb-8">
+                            <div className="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider orbitron">
+                                <span className={step >= 1 ? "text-cyan-400 text-glow-cyan" : ""}>基本資料</span>
+                                <span className={step >= 2 ? "text-cyan-400 text-glow-cyan" : ""}>內容情境</span>
+                                <span className={step >= 3 ? "text-cyan-400 text-glow-cyan" : ""}>規則設定</span>
+                                <span className={step >= 4 ? "text-cyan-400 text-glow-cyan" : ""}>完成生成</span>
+                            </div>
+                            <div className="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
+                                <motion.div 
+                                    className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                                    initial={{ width: "0%" }}
+                                    animate={{ width: `${(step / 4) * 100}%` }}
+                                    transition={{ duration: 0.3 }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Wizard Card */}
+                        <Card className="min-h-[500px] flex flex-col">
+                            <div className="p-6 md:p-8 flex-1">
+                                <AnimatePresence mode="wait">
+                                    {step === 1 && renderStep1()}
+                                    {step === 2 && renderStep2()}
+                                    {step === 3 && renderStep3()}
+                                    {step === 4 && renderStep4()}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Footer Controls */}
+                            <div className="bg-slate-900/50 border-t border-slate-800 p-6 flex justify-between items-center backdrop-blur-sm">
+                                {step > 1 ? (
+                                    <button 
+                                        onClick={() => setStep(step - 1)}
+                                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+                                    >
+                                        <ChevronLeft size={20} />
+                                        上一步
+                                    </button>
+                                ) : (
+                                    <div /> /* Spacer */
+                                )}
+
+                                {step < 4 ? (
+                                    <button 
+                                        onClick={() => setStep(step + 1)}
+                                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all hover:scale-105 active:scale-95 group"
+                                    >
+                                        下一步
+                                        <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={() => {
+                                            setStep(1);
+                                            setCopied(false);
+                                        }}
+                                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-all"
+                                    >
+                                        <RotateCcw size={18} />
+                                        重新設計
+                                    </button>
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Footer */}
+                        <footer className="mt-12 py-6 text-center text-slate-600 text-xs font-medium orbitron tracking-widest">
+                            © 2025 Ken Cheng | Created with Gemini Script & Tailwind CSS
+                        </footer>
+
+                        {/* Floating Action Button (FAB) */}
+                        <div className="fixed bottom-6 right-6 z-50">
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 backdrop-blur-md bg-gradient-to-r from-cyan-600/80 via-blue-600/80 to-purple-600/80 animate-holo text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:shadow-[0_0_25px_rgba(6,182,212,0.8)] transition-all hover:scale-105 group">
+                                <Monitor size={20} className="group-hover:animate-pulse" />
+                                <span className="font-bold text-sm tracking-wide text-shadow-sm">Ken Cheng設計</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
