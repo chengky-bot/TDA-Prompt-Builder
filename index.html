@@ -196,7 +196,8 @@
             Accessibility,
             ExternalLink,
             Sun,
-            Moon
+            Moon,
+            Github
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
@@ -263,38 +264,28 @@
 
         // --- Main Application ---
 
-        function App() {
-            const [step, setStep] = useState(1);
-            const [copied, setCopied] = useState(false);
-            const [theme, setTheme] = useState('cyber'); // 'cyber' or 'plain'
-
-            // Sync theme with body class
-            useEffect(() => {
-                document.body.className = `theme-${theme}`;
-            }, [theme]);
-            
-            // Form State
-            const [formData, setFormData] = useState({
-                toolName: "",
-                category: "教學遊戲", // Default
-                subjectCategory: "語文", // Subject Category
-                subjectCustomInput: "", // Custom Subject Input
-                gameStyle: ["扭蛋機 (Gachapon)"], // Changed to Array for Multi-select
-                gameStyleCustomInput: "", // Custom Game Style Input
-                interactionType: ["3選1答案"], // Array for Multi-select
-                interactionCustomInput: "", // Custom Interaction Input
-                learningDiversity: [], // New: Learning Diversity Support
-                examples: [
-                    { text: "", level: "初階" },
-                    { text: "", level: "中階" },
-                    { text: "", level: "高階" } 
-                ],
-                grade: "小學二年級 (P2)",
-                senLevel: "輕度 (Mild)",
-                purpose: "",
-                context: "",
-                value: ["堅毅"], 
-                rules: [`計分規則：努力獎勵型計分規則：
+        // Function to return fresh initial state
+        const getInitialFormData = () => ({
+            toolName: "",
+            category: "教學遊戲", 
+            subjectCategory: "語文", 
+            subjectCustomInput: "", 
+            gameStyle: ["扭蛋機 (Gachapon)"], 
+            gameStyleCustomInput: "", 
+            interactionType: ["3選1答案"], 
+            interactionCustomInput: "", 
+            learningDiversity: [], 
+            examples: [
+                { text: "", level: "初階" },
+                { text: "", level: "中階" },
+                { text: "", level: "高階" } 
+            ],
+            grade: "小學二年級 (P2)",
+            senLevel: "輕度 (Mild)",
+            purpose: "",
+            context: "",
+            value: ["堅毅"], 
+            rules: [`計分規則：努力獎勵型計分規則：
 每答對 1 題得 10 分（肯定學習成果），
 每答錯 1 次額外加 1 分（肯定勇於嘗試）。
 總分＝答對得分＋錯誤次數，
@@ -303,15 +294,25 @@
 🎉 恭喜你全部答對！
 能力得分：20 分
 努力嘗試：6 次
-總成就分：26 分`, "", "首頁輸入框提示：請輸入你的名字開始遊戲： 例如：小明, 行動按鈕：開始遊戲"]
-            });
+總成就分：26 分`, "答對時給予 提示音及對應的知識理論，為何該答案是正確", "首頁輸入框提示：請輸入你的名字開始遊戲： 例如：小明, 行動按鈕：開始遊戲"]
+        });
 
-            // Toggle Theme Handler
+        function App() {
+            const [step, setStep] = useState(1);
+            const [copied, setCopied] = useState(false);
+            const [theme, setTheme] = useState('cyber');
+
+            useEffect(() => {
+                document.body.className = `theme-${theme}`;
+            }, [theme]);
+            
+            // Initialize state using the generator function
+            const [formData, setFormData] = useState(getInitialFormData());
+
             const toggleTheme = () => {
                 setTheme(prev => prev === 'cyber' ? 'plain' : 'cyber');
             };
 
-            // Options
             const categories = [
                 { value: "教學工具", label: "📚 教學工具", icon: BookOpen },
                 { value: "教學遊戲", label: "🎮 教學遊戲", icon: Gamepad2 },
@@ -1069,7 +1070,6 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                             : 'text-slate-400'
                                         }`}>
                                             [ TDA Prompt Builder ] 
-                                            <img src="https://i.imgur.com/B9zZ1dL.gif" alt="Logo" className="h-8 w-auto object-contain inline-block" />
                                         </span>
                                     </div>
                                 </h1>
@@ -1140,50 +1140,58 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                             <div className={`p-6 flex justify-between items-center backdrop-blur-sm border-t ${
                                 theme === 'cyber' ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-100'
                             }`}>
-                                {step > 1 ? (
-                                    <button 
-                                        onClick={() => setStep(step - 1)}
-                                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-                                            theme === 'cyber'
-                                            ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                                            : 'text-slate-600 hover:bg-white hover:shadow-sm'
-                                        }`}
-                                    >
-                                        <ChevronLeft size={20} />
-                                        上一步
-                                    </button>
-                                ) : (
-                                    <div /> /* Spacer */
-                                )}
+                                {/* Left Side: Previous Button */}
+                                <div className="w-1/3 flex justify-start">
+                                    {step > 1 && (
+                                        <button 
+                                            onClick={() => setStep(step - 1)}
+                                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+                                                theme === 'cyber'
+                                                ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                                : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
+                                            }`}
+                                        >
+                                            <ChevronLeft size={20} />
+                                            上一步
+                                        </button>
+                                    )}
+                                </div>
 
-                                {step < 4 ? (
-                                    <button 
-                                        onClick={() => setStep(step + 1)}
-                                        className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 group text-white ${
-                                            theme === 'cyber'
-                                            ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
-                                            : 'bg-blue-600 hover:bg-blue-700 shadow-md'
-                                        }`}
-                                    >
-                                        下一步
-                                        <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                                    </button>
-                                ) : (
-                                    <button 
-                                        onClick={() => {
-                                            setStep(1);
-                                            setCopied(false);
-                                        }}
-                                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-                                            theme === 'cyber'
-                                            ? 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800'
-                                            : 'text-slate-500 hover:text-blue-600 hover:bg-white hover:shadow-sm'
-                                        }`}
-                                    >
-                                        <RotateCcw size={18} />
-                                        重新設計
-                                    </button>
-                                )}
+                                {/* Center: Spacer for removed Reset Button */}
+                                <div className="w-1/3 flex justify-center">
+                                </div>
+
+                                {/* Right Side: Next/Restart Button */}
+                                <div className="w-1/3 flex justify-end">
+                                    {step < 4 ? (
+                                        <button 
+                                            onClick={() => setStep(step + 1)}
+                                            className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 group text-white ${
+                                                theme === 'cyber'
+                                                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                                                : 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                                            }`}
+                                        >
+                                            下一步
+                                            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => {
+                                                setStep(1);
+                                                setCopied(false);
+                                            }}
+                                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+                                                theme === 'cyber'
+                                                ? 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800'
+                                                : 'text-slate-500 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
+                                            }`}
+                                        >
+                                            <RotateCcw size={18} />
+                                            重新設計
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </Card>
 
@@ -1233,6 +1241,15 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                             }`}>
                                 Lovable (不能分享) <ExternalLink size={14} />
                             </a>
+
+                            {/* GitHub Link */}
+                            <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
+                                theme === 'cyber'
+                                ? 'border-zinc-500/30 bg-zinc-900/20 text-zinc-300 hover:bg-zinc-500/20 hover:text-zinc-100'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black shadow-sm'
+                            }`}>
+                                GitHub <Github size={14} />
+                            </a>
                         </div>
 
                         {/* Footer */}
@@ -1244,7 +1261,11 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                         {/* Floating Action Button (FAB) */}
                         <div className="fixed bottom-6 right-6 z-50">
-                            <button className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-md transition-all hover:scale-105 group ${
+                            <a 
+                                href="https://chengky-bot.github.io/kencheng-homepage/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-md transition-all hover:scale-105 group ${
                                 theme === 'cyber'
                                 ? 'border-white/20 bg-gradient-to-r from-cyan-600/80 via-blue-600/80 to-purple-600/80 animate-holo text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:shadow-[0_0_25px_rgba(6,182,212,0.8)]'
                                 : 'bg-white border-slate-200 text-slate-700 shadow-lg hover:shadow-xl'
@@ -1252,7 +1273,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 <Monitor size={20} className={theme === 'cyber' ? "group-hover:animate-pulse" : ""} />
                                 <span className="font-bold text-sm tracking-wide text-shadow-sm">Ken Cheng設計</span>
                                 <img src="https://i.imgur.com/OQwyeIV.png" alt="Ken Cheng Signature" className="h-6 w-auto ml-1" />
-                            </button>
+                            </a>
                         </div>
 
                     </div>
