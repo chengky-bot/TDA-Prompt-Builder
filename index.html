@@ -17,14 +17,9 @@
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            overflow-x: hidden;
-            transition: background-color 0.5s ease, color 0.5s ease;
-        }
-
-        /* --- Cyber Theme Styles --- */
-        body.theme-cyber {
             background-color: #020617; /* Slate 950 */
             color: #e2e8f0; /* Slate 200 */
+            overflow-x: hidden;
         }
 
         /* Cyber Grid Background */
@@ -42,12 +37,6 @@
             animation: grid-move 20s linear infinite;
             z-index: -1;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        
-        body.theme-cyber .cyber-grid {
-            opacity: 1;
         }
 
         @keyframes grid-move {
@@ -65,23 +54,24 @@
             background: radial-gradient(circle, transparent 50%, #020617 100%);
             z-index: -1;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        body.theme-cyber .vignette {
-            opacity: 1;
         }
 
-        /* Scrollbar - Conditional styling via CSS variables or specific overrides */
-        body.theme-cyber textarea::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
-        body.theme-cyber textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; border: 1px solid #06b6d4; }
-        body.theme-cyber textarea::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
-
-        body.theme-plain textarea::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        body.theme-plain textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        body.theme-plain textarea::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        textarea::-webkit-scrollbar { width: 8px; }
+        /* Scrollbar */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #0f172a; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+            border: 1px solid #06b6d4;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4; 
+        }
 
         /* Holographic Gradient Animation */
         @keyframes gradient-xy {
@@ -94,27 +84,25 @@
             animation: gradient-xy 3s ease infinite;
         }
 
-        /* Text Glows - Only in Cyber Mode */
-        body.theme-cyber .text-glow-cyan {
+        /* Text Glows */
+        .text-glow-cyan {
             text-shadow: 0 0 5px rgba(6, 182, 212, 0.5), 0 0 10px rgba(6, 182, 212, 0.3);
         }
-        body.theme-cyber .text-glow-purple {
+        .text-glow-purple {
             text-shadow: 0 0 5px rgba(168, 85, 247, 0.5), 0 0 10px rgba(168, 85, 247, 0.3);
         }
 
-        /* Tech Borders - Cyber Mode */
+        /* Tech Borders */
         .tech-border {
             position: relative;
-            background: rgba(15, 23, 42, 0.6); 
-            border: 1px solid rgba(6, 182, 212, 0.3); 
+            background: rgba(15, 23, 42, 0.6); /* Slate 900 / 60% */
+            border: 1px solid rgba(6, 182, 212, 0.3); /* Cyan 500 / 30% */
             box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
         }
         
-        /* Tech Input - Cyber Mode */
         .tech-input {
-            background: rgba(30, 41, 59, 0.5); 
+            background: rgba(30, 41, 59, 0.5); /* Slate 800 / 50% */
             border: 1px solid #334155;
             color: #ecfeff;
             transition: all 0.3s ease;
@@ -125,31 +113,6 @@
             background: rgba(30, 41, 59, 0.8);
         }
 
-        /* --- Plain Theme Styles --- */
-        body.theme-plain {
-            background-color: #f8fafc; /* Slate 50 */
-            color: #1e293b; /* Slate 800 */
-        }
-
-        .plain-border {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s ease;
-        }
-
-        .plain-input {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #334155;
-            transition: all 0.3s ease;
-        }
-        .plain-input:focus {
-            border-color: #3b82f6; /* Blue 500 */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-            outline: none;
-        }
-
         .orbitron {
             font-family: 'Orbitron', sans-serif;
         }
@@ -158,8 +121,8 @@
         }
     </style>
 </head>
-<body class="selection:bg-cyan-500 selection:text-white transition-colors duration-500">
-    <!-- Background Elements (Only visible in Cyber theme) -->
+<body class="selection:bg-cyan-500 selection:text-white">
+    <!-- Background Elements -->
     <div class="cyber-grid"></div>
     <div class="vignette"></div>
     
@@ -191,71 +154,53 @@
             Trash2,
             Monitor,
             Bot,
-            Cpu, 
-            Zap,  
-            Accessibility,
-            ExternalLink,
-            Sun,
-            Moon
+            Cpu, // Added CPU icon for extra tech feel
+            Zap,  // Added Zap icon
+            Accessibility, // Added Accessibility icon
+            ExternalLink // Added ExternalLink icon
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
 
-        const Card = ({ children, className = "", theme }) => (
-            <div className={`rounded-2xl overflow-hidden ${theme === 'cyber' ? 'tech-border' : 'plain-border'} ${className}`}>
+        const Card = ({ children, className = "" }) => (
+            <div className={`rounded-2xl overflow-hidden tech-border ${className}`}>
                 {children}
             </div>
         );
 
-        const Label = ({ children, theme }) => (
-            <label className={`block text-sm font-bold mb-2 flex items-center gap-2 ${
-                theme === 'cyber' 
-                ? 'text-cyan-300 tracking-wide uppercase orbitron' 
-                : 'text-slate-700 tracking-normal'
-            }`}>
-                <span className={`w-1 h-4 rounded-sm inline-block ${theme === 'cyber' ? 'bg-cyan-500' : 'bg-blue-600'}`}></span>
+        const Label = ({ children }) => (
+            <label className="block text-sm font-bold text-cyan-300 mb-2 tracking-wide uppercase orbitron flex items-center gap-2">
+                <span className="w-1 h-4 bg-cyan-500 rounded-sm inline-block"></span>
                 {children}
             </label>
         );
 
-        const Input = (props) => {
-            const { theme, className, ...rest } = props;
-            return (
-                <input 
-                    className={`w-full px-4 py-3 rounded-xl outline-none ${theme === 'cyber' ? 'tech-input' : 'plain-input'} ${className || ""}`}
-                    {...rest} 
-                />
-            );
-        };
+        const Input = (props) => (
+            <input 
+                className={`w-full px-4 py-3 rounded-xl outline-none tech-input ${props.className || ""}`}
+                {...props} 
+            />
+        );
 
-        const TextArea = (props) => {
-            const { theme, className, ...rest } = props;
-            return (
-                <textarea 
-                    className={`w-full px-4 py-3 rounded-xl outline-none min-h-[120px] ${theme === 'cyber' ? 'tech-input' : 'plain-input'} ${className || ""}`}
-                    {...rest} 
-                />
-            );
-        };
+        const TextArea = (props) => (
+            <textarea 
+                className={`w-full px-4 py-3 rounded-xl outline-none tech-input min-h-[120px] ${props.className || ""}`}
+                {...props} 
+            />
+        );
 
-        const Select = ({ options, value, onChange, className = "", theme }) => (
+        const Select = ({ options, value, onChange, className = "" }) => (
             <div className={`relative ${className}`}>
                 <select 
                     value={value}
                     onChange={onChange}
-                    className={`w-full px-4 py-3 rounded-xl outline-none appearance-none cursor-pointer ${theme === 'cyber' ? 'tech-input' : 'plain-input'}`}
+                    className="w-full px-4 py-3 rounded-xl outline-none tech-input appearance-none cursor-pointer"
                 >
                     {options.map(opt => (
-                        <option 
-                            key={opt.value} 
-                            value={opt.value} 
-                            className={theme === 'cyber' ? "bg-slate-900 text-slate-200" : "bg-white text-slate-800"}
-                        >
-                            {opt.label}
-                        </option>
+                        <option key={opt.value} value={opt.value} className="bg-slate-900 text-slate-200">{opt.label}</option>
                     ))}
                 </select>
-                <div className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'cyber' ? 'text-cyan-500' : 'text-slate-400'}`}>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-500">
                     <ChevronRight size={16} className="rotate-90" />
                 </div>
             </div>
@@ -266,12 +211,6 @@
         function App() {
             const [step, setStep] = useState(1);
             const [copied, setCopied] = useState(false);
-            const [theme, setTheme] = useState('cyber'); // 'cyber' or 'plain'
-
-            // Sync theme with body class
-            useEffect(() => {
-                document.body.className = `theme-${theme}`;
-            }, [theme]);
             
             // Form State
             const [formData, setFormData] = useState({
@@ -287,13 +226,13 @@
                 examples: [
                     { text: "", level: "初階" },
                     { text: "", level: "中階" },
-                    { text: "", level: "高階" } 
+                    { text: "", level: "高階" } // Added High level default
                 ],
                 grade: "小學二年級 (P2)",
                 senLevel: "輕度 (Mild)",
                 purpose: "",
                 context: "",
-                value: ["堅毅"], 
+                value: ["堅毅"], // Changed to Array for Multi-select
                 rules: [`計分規則：努力獎勵型計分規則：
 每答對 1 題得 10 分（肯定學習成果），
 每答錯 1 次額外加 1 分（肯定勇於嘗試）。
@@ -305,11 +244,6 @@
 努力嘗試：6 次
 總成就分：26 分`, ""]
             });
-
-            // Toggle Theme Handler
-            const toggleTheme = () => {
-                setTheme(prev => prev === 'cyber' ? 'plain' : 'cyber');
-            };
 
             // Options
             const categories = [
@@ -347,7 +281,7 @@
                 "4選1答案", 
                 "多選題", 
                 "輸入文字 (Text Input)",
-                "找詞遊戲 (Word Search Puzzle)", 
+                "找詞遊戲 (Word Search Puzzle)", // Added Word Search Puzzle
                 
                 // 操作與排序
                 "點擊 (Click)",
@@ -630,9 +564,8 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="col-span-1 md:col-span-2">
-                            <Label theme={theme}>1. 工具名稱 (Tool Name)</Label>
+                            <Label>1. 工具名稱 (Tool Name)</Label>
                             <Input 
-                                theme={theme}
                                 placeholder="例如：快樂農場加法練習、課堂情緒溫度計..." 
                                 value={formData.toolName}
                                 onChange={(e) => setFormData({...formData, toolName: e.target.value})}
@@ -640,20 +573,16 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         </div>
 
                         <div>
-                            <Label theme={theme}>2. 工具範疇 (Category)</Label>
+                            <Label>2. 工具範疇 (Category)</Label>
                             <div className="grid grid-cols-1 gap-3">
                                 {categories.map((cat) => (
                                     <button
                                         key={cat.value}
                                         onClick={() => setFormData({...formData, category: cat.value})}
                                         className={`flex items-center p-3 rounded-xl border transition-all ${
-                                            theme === 'cyber'
-                                            ? formData.category === cat.value 
+                                            formData.category === cat.value 
                                                 ? 'border-cyan-500 bg-cyan-900/30 text-cyan-200 ring-1 ring-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
                                                 : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                            : formData.category === cat.value
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
-                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
                                         }`}
                                     >
                                         <cat.icon size={20} className="mr-3" />
@@ -664,9 +593,8 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
            
                             {/* Subject Selection - Moved to top level */}
                             <div className="mt-6">
-                                <Label theme={theme}>3. 科目 (Subject)</Label>
+                                <Label>3. 科目 (Subject)</Label>
                                 <Select 
-                                    theme={theme}
                                     options={subjects.map(s => ({value: s, label: s}))}
                                     value={formData.subjectCategory}
                                     onChange={(e) => setFormData({...formData, subjectCategory: e.target.value})}
@@ -674,7 +602,6 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 {formData.subjectCategory === "其他" && (
                                     <div className="mt-2">
                                         <Input
-                                            theme={theme}
                                             placeholder="請輸入科目名稱..."
                                             value={formData.subjectCustomInput}
                                             onChange={(e) => setFormData({...formData, subjectCustomInput: e.target.value})}
@@ -693,20 +620,16 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 >
                                     {/* Game Style */}
                                     <div>
-                                        <Label theme={theme}>遊戲風格 (Game Style) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                                        <Label>遊戲風格 (Game Style) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {gameStyles.map(style => (
                                                 <button
                                                     key={style}
                                                     onClick={() => toggleSelection('gameStyle', style)}
                                                     className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
-                                                        theme === 'cyber'
-                                                        ? formData.gameStyle.includes(style)
+                                                        formData.gameStyle.includes(style)
                                                             ? 'border-pink-500 bg-pink-900/30 text-pink-200 ring-1 ring-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.3)]' 
                                                             : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                                        : formData.gameStyle.includes(style)
-                                                            ? 'border-pink-500 bg-pink-50 text-pink-700 ring-1 ring-pink-500'
-                                                            : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
                                                     }`}
                                                 >
                                                     {style}
@@ -716,7 +639,6 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                         {formData.gameStyle.includes("其他") && (
                                             <div className="mt-2">
                                                 <Input
-                                                    theme={theme}
                                                     placeholder="請輸入遊戲風格 (例如：射擊遊戲、迷宮)..."
                                                     value={formData.gameStyleCustomInput}
                                                     onChange={(e) => setFormData({...formData, gameStyleCustomInput: e.target.value})}
@@ -728,13 +650,12 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                                     {/* Example Questions */}
                                     <div>
-                                        <Label theme={theme}>範例題目 (Example Questions)</Label>
+                                        <Label>範例題目 (Example Questions)</Label>
                                         <div className="space-y-3">
                                             {formData.examples.map((ex, index) => (
                                                 <div key={index} className="flex gap-2 items-center">
                                                     <div className="flex-1">
                                                         <Input 
-                                                            theme={theme}
                                                             placeholder={`例如：蘋果是甚麼顏色？`}
                                                             value={ex.text}
                                                             onChange={(e) => handleExampleChange(index, 'text', e.target.value)}
@@ -742,7 +663,6 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                                     </div>
                                                     <div className="w-28">
                                                         <Select 
-                                                            theme={theme}
                                                             options={difficultyLevels}
                                                             value={ex.level}
                                                             onChange={(e) => handleExampleChange(index, 'level', e.target.value)}
@@ -750,11 +670,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                                     </div>
                                                     <button 
                                                         onClick={() => removeExample(index)}
-                                                        className={`p-3 rounded-xl transition-colors border border-transparent ${
-                                                            theme === 'cyber'
-                                                            ? 'text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:border-red-500/50'
-                                                            : 'text-red-500 hover:bg-red-50 hover:border-red-200'
-                                                        }`}
+                                                        className="p-3 text-red-400 hover:text-red-300 hover:bg-red-900/30 border border-transparent hover:border-red-500/50 rounded-xl transition-colors"
                                                         disabled={formData.examples.length === 1}
                                                         title="移除範例"
                                                     >
@@ -765,11 +681,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                         </div>
                                         <button 
                                             onClick={addExample}
-                                            className={`mt-3 text-sm font-bold flex items-center px-4 py-2 rounded-lg border border-transparent transition-all ${
-                                                theme === 'cyber'
-                                                ? 'text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/30 hover:border-cyan-500/50'
-                                                : 'text-blue-600 hover:bg-blue-50 hover:border-blue-200'
-                                            }`}
+                                            className="mt-3 text-sm font-bold text-cyan-400 hover:text-cyan-200 flex items-center px-4 py-2 rounded-lg hover:bg-cyan-900/30 border border-transparent hover:border-cyan-500/50 transition-all"
                                         >
                                             <Plus size={16} className="mr-1" /> 新增範例
                                         </button>
@@ -781,9 +693,8 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                         <div className="space-y-6">
                             <div>
-                                <Label theme={theme}>4. 目標年級 (Target Grade)</Label>
+                                <Label>4. 目標年級 (Target Grade)</Label>
                                 <Select 
-                                    theme={theme}
                                     options={grades.map(g => ({value: g, label: g}))}
                                     value={formData.grade}
                                     onChange={(e) => setFormData({...formData, grade: e.target.value})}
@@ -791,36 +702,28 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                             </div>
 
                             <div>
-                                <Label theme={theme}>5. 支援需求 (SEN Support)</Label>
+                                <Label>5. 支援需求 (SEN Support)</Label>
                                 <div className="grid grid-cols-1 gap-3">
                                     <button
                                         onClick={() => setFormData({...formData, senLevel: "輕度 (Mild)"})}
                                         className={`p-4 rounded-xl border text-left transition-all ${
-                                            theme === 'cyber'
-                                            ? formData.senLevel === "輕度 (Mild)" 
+                                            formData.senLevel === "輕度 (Mild)" 
                                                 ? 'border-emerald-500 bg-emerald-900/30 text-emerald-200 ring-1 ring-emerald-500' 
                                                 : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                            : formData.senLevel === "輕度 (Mild)"
-                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
-                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
                                         }`}
                                     >
-                                        <div className={`font-bold tracking-wide ${theme === 'cyber' ? 'orbitron' : ''}`}>輕度需求 (Mild)</div>
+                                        <div className="font-bold orbitron tracking-wide">輕度需求 (Mild)</div>
                                         <div className="text-xs opacity-70 mt-1">適合一般理解力，可包含較多文字說明與引導。</div>
                                     </button>
                                     <button
                                         onClick={() => setFormData({...formData, senLevel: "中度 (Moderate)"})}
                                         className={`p-4 rounded-xl border text-left transition-all ${
-                                            theme === 'cyber'
-                                            ? formData.senLevel === "中度 (Moderate)" 
+                                            formData.senLevel === "中度 (Moderate)" 
                                                 ? 'border-orange-500 bg-orange-900/30 text-orange-200 ring-1 ring-orange-500' 
                                                 : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                            : formData.senLevel === "中度 (Moderate)"
-                                                ? 'border-orange-500 bg-orange-50 text-orange-700 ring-1 ring-orange-500'
-                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
                                         }`}
                                     >
-                                        <div className={`font-bold tracking-wide ${theme === 'cyber' ? 'orbitron' : ''}`}>中度需求 (Moderate)</div>
+                                        <div className="font-bold orbitron tracking-wide">中度需求 (Moderate)</div>
                                         <div className="text-xs opacity-70 mt-1">需要高強度視覺輔助，少字多圖，詞彙簡單直接。</div>
                                     </button>
                                 </div>
@@ -828,20 +731,16 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                             {/* 6. Learning Diversity Support - New Section */}
                             <div>
-                                <Label theme={theme}>6. 照顧學習差異 (Learning Diversity) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                                <Label>6. 照顧學習差異 (Learning Diversity) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {learningDiversityOptions.map(opt => (
                                         <button
                                             key={opt.label}
                                             onClick={() => toggleSelection('learningDiversity', opt.label)}
                                             className={`p-3 rounded-lg text-sm font-medium transition-all border text-left flex flex-col gap-1 h-full ${
-                                                theme === 'cyber'
-                                                ? formData.learningDiversity.includes(opt.label)
-                                                    ? 'border-cyan-500 bg-cyan-900/30 text-cyan-200 ring-1 ring-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
-                                                    : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                                : formData.learningDiversity.includes(opt.label)
-                                                    ? 'border-cyan-500 bg-cyan-50 text-cyan-800 ring-1 ring-cyan-500'
-                                                    : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                                formData.learningDiversity.includes(opt.label)
+                                                ? 'border-cyan-500 bg-cyan-900/30 text-cyan-200 ring-1 ring-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
                                             }`}
                                         >
                                             <span className="font-bold">{opt.label}</span>
@@ -853,21 +752,17 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         </div>
 
                         {/* 7. Interaction Mechanism - Renumbered to 7 */}
-                        <div className={`col-span-1 md:col-span-2 pt-4 border-t ${theme === 'cyber' ? 'border-slate-800/50' : 'border-slate-200'}`}>
-                             <Label theme={theme}>7. 互動機制 (Interaction) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                        <div className="col-span-1 md:col-span-2 pt-4 border-t border-slate-800/50">
+                             <Label>7. 互動機制 (Interaction) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                {interactionTypes.map(type => (
                                  <button
                                    key={type}
                                    onClick={() => toggleSelection('interactionType', type)}
                                    className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
-                                     theme === 'cyber'
-                                     ? formData.interactionType.includes(type)
-                                         ? 'border-violet-500 bg-violet-900/30 text-violet-200 ring-1 ring-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]' 
-                                         : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                     : formData.interactionType.includes(type)
-                                         ? 'border-violet-500 bg-violet-50 text-violet-700 ring-1 ring-violet-500'
-                                         : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                     formData.interactionType.includes(type)
+                                     ? 'border-violet-500 bg-violet-900/30 text-violet-200 ring-1 ring-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]' 
+                                     : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
                                    }`}
                                  >
                                    {type}
@@ -877,7 +772,6 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                              {formData.interactionType.includes("其他") && (
                                <div className="mt-2">
                                  <Input
-                                   theme={theme}
                                    placeholder="請輸入互動方式 (例如：連連看、填空)..."
                                    value={formData.interactionCustomInput}
                                    onChange={(e) => setFormData({...formData, interactionCustomInput: e.target.value})}
@@ -893,10 +787,9 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
             const renderStep2 = () => (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                     <div>
-                        <Label theme={theme}>5. 核心用途 (Core Purpose)</Label>
-                        <div className={`text-xs mb-2 ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>請簡述這個工具要解決什麼問題？</div>
+                        <Label>5. 核心用途 (Core Purpose)</Label>
+                        <div className="text-xs text-slate-400 mb-2">請簡述這個工具要解決什麼問題？</div>
                         <TextArea 
-                            theme={theme}
                             placeholder="例如：讓學生透過拖放蘋果來練習 10 以內的加法，或是幫助自閉症學生指認當下的情緒..." 
                             value={formData.purpose}
                             onChange={(e) => setFormData({...formData, purpose: e.target.value})}
@@ -905,29 +798,24 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <Label theme={theme}>6. 生活情境設定 (Context)</Label>
+                            <Label>6. 生活情境設定 (Context)</Label>
                             <Input 
-                                theme={theme}
                                 placeholder="例如：超級市場購物、搭乘地鐵、種植花朵..." 
                                 value={formData.context}
                                 onChange={(e) => setFormData({...formData, context: e.target.value})}
                             />
                         </div>
                         <div>
-                            <Label theme={theme}>7. 融入價值觀 (Values) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                            <Label>7. 融入價值觀 (Values) <span className="text-xs text-cyan-500 ml-1 font-normal orbitron">[可多選]</span></Label>
                             <div className="grid grid-cols-2 gap-2 mt-2">
                                 {values.map(val => (
                                     <button
                                         key={val}
                                         onClick={() => toggleSelection('value', val)}
                                         className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
-                                            theme === 'cyber'
-                                            ? formData.value.includes(val)
-                                                ? 'border-yellow-500 bg-yellow-900/30 text-yellow-200 ring-1 ring-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' 
-                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                            : formData.value.includes(val)
-                                                ? 'border-yellow-500 bg-yellow-50 text-yellow-800 ring-1 ring-yellow-500'
-                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                            formData.value.includes(val)
+                                            ? 'border-yellow-500 bg-yellow-900/30 text-yellow-200 ring-1 ring-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' 
+                                            : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
                                         }`}
                                     >
                                         {val}
@@ -942,17 +830,16 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
             const renderStep3 = () => (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                     <div>
-                        <Label theme={theme}>8. 具體規則與邏輯 (Rules)</Label>
-                        <div className={`text-xs mb-2 ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>請列出這個工具必須遵守的規則（例如：計分方式、匯入功能等）。</div>
+                        <Label>8. 具體規則與邏輯 (Rules)</Label>
+                        <div className="text-xs text-slate-400 mb-2">請列出這個工具必須遵守的規則（例如：計分方式、匯入功能等）。</div>
                         
                         <div className="space-y-3">
                             {formData.rules.map((rule, index) => (
                                 <div key={index} className="flex gap-2">
-                                    <div className={`flex-none pt-3 font-bold text-sm w-6 ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-600'}`}>
+                                    <div className="flex-none pt-3 text-cyan-500 font-bold text-sm w-6 orbitron">
                                         {index + 1}.
                                     </div>
                                     <TextArea 
-                                        theme={theme}
                                         value={rule} 
                                         onChange={(e) => handleRuleChange(index, e.target.value)}
                                         placeholder={`規則 ${index + 1} (例如：答錯時要播放提示音)`}
@@ -960,11 +847,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                     />
                                     <button 
                                         onClick={() => removeRule(index)}
-                                        className={`flex-none h-12 mt-1 p-3 rounded-xl transition-colors border border-transparent ${
-                                            theme === 'cyber'
-                                            ? 'text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:border-red-500/50'
-                                            : 'text-red-500 hover:bg-red-50 hover:border-red-200'
-                                        }`}
+                                        className="flex-none p-3 text-red-400 hover:text-red-300 hover:bg-red-900/30 border border-transparent hover:border-red-500/50 rounded-xl transition-colors h-12 mt-1"
                                         disabled={formData.rules.length === 1}
                                     >
                                         ✕
@@ -975,11 +858,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         
                         <button 
                             onClick={addRule}
-                            className={`mt-3 text-sm font-bold flex items-center px-4 py-2 rounded-lg border border-transparent transition-all ${
-                                theme === 'cyber'
-                                ? 'text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/30 hover:border-cyan-500/50'
-                                : 'text-blue-600 hover:bg-blue-50 hover:border-blue-200'
-                            }`}
+                            className="mt-3 text-sm font-bold text-cyan-400 hover:text-cyan-200 flex items-center px-4 py-2 rounded-lg hover:bg-cyan-900/30 border border-transparent hover:border-cyan-500/50 transition-all"
                         >
                             + 新增一條規則
                         </button>
@@ -989,25 +868,13 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
             const renderStep4 = () => (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
-                    <div className={`border p-6 rounded-2xl flex items-start gap-4 ${
-                        theme === 'cyber'
-                        ? 'bg-slate-900/50 border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
-                        : 'bg-white border-blue-200 shadow-md'
-                    }`}>
-                        <div className={`p-3 rounded-full shadow-sm ${
-                            theme === 'cyber'
-                            ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/50'
-                            : 'bg-blue-100 text-blue-600'
-                        }`}>
+                    <div className="bg-slate-900/50 border border-cyan-500/30 p-6 rounded-2xl flex items-start gap-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+                        <div className="p-3 bg-cyan-900/30 rounded-full shadow-sm text-cyan-400 border border-cyan-500/50">
                             <Sparkles size={24} />
                         </div>
                         <div>
-                            <h3 className={`text-lg font-bold ${
-                                theme === 'cyber' ? 'text-cyan-100 orbitron tracking-wide' : 'text-slate-800'
-                            }`}>提詞已生成！</h3>
-                            <p className={`text-sm mt-1 ${
-                                theme === 'cyber' ? 'text-cyan-200/70' : 'text-slate-500'
-                            }`}>
+                            <h3 className="text-lg font-bold text-cyan-100 orbitron tracking-wide">提詞已生成！</h3>
+                            <p className="text-cyan-200/70 text-sm mt-1">
                                 請點擊下方按鈕複製，然後貼給 AI。
                             </p>
                         </div>
@@ -1017,21 +884,13 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         <textarea 
                             readOnly
                             value={generatePrompt()}
-                            className={`w-full h-80 font-mono text-xs p-6 rounded-2xl outline-none resize-none leading-relaxed border shadow-inner ${
-                                theme === 'cyber'
-                                ? 'bg-slate-950 text-cyan-300 border-slate-800'
-                                : 'bg-slate-50 text-slate-700 border-slate-200'
-                            }`}
+                            className="w-full h-80 bg-slate-950 text-cyan-300 font-mono text-xs p-6 rounded-2xl outline-none resize-none leading-relaxed border border-slate-800 shadow-inner"
                         />
                         <button 
                             onClick={handleCopy}
-                            className={`absolute top-4 right-4 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
-                                theme === 'cyber'
-                                ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
-                                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
-                            }`}
+                            className="absolute top-4 right-4 bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
                         >
-                            {copied ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                            {copied ? <CheckCircle size={16} className="text-green-400" /> : <Copy size={16} />}
                             {copied ? "已複製！" : "複製內容"}
                         </button>
                     </div>
@@ -1039,62 +898,33 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
             );
 
             return (
-                <div className="min-h-screen p-4 md:p-8 relative z-10 transition-colors duration-500">
+                <div className="min-h-screen p-4 md:p-8 relative z-10">
                     <div className="max-w-3xl mx-auto pb-20"> {/* pb-20 for footer spacing */}
                         
                         {/* Header */}
-                        <header className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-start justify-between gap-4 relative">
+                        <header className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-start justify-between gap-4">
                             <div>
                                 <h1 className="text-2xl md:text-3xl font-black flex items-start gap-3 justify-center md:justify-start">
-                                    <span className={`text-4xl ${theme === 'cyber' ? 'filter drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]' : ''}`}>🤖</span>
+                                    <span className="text-4xl filter drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">🤖</span> {/* Robot Emoji */}
                                     <div className="flex flex-col">
-                                        <span className={`font-black tracking-wide text-xl md:text-2xl ${
-                                            theme === 'cyber' 
-                                            ? 'bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 drop-shadow-sm text-glow-cyan'
-                                            : 'text-slate-900'
-                                        }`}>
+                                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 drop-shadow-sm font-black tracking-wide text-glow-cyan text-xl md:text-2xl">
                                             教學設計輔助工具提詞器
                                         </span>
-                                        <span className={`tracking-wider text-lg md:text-xl font-bold mt-1 ${
-                                            theme === 'cyber'
-                                            ? "font-['Orbitron'] bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 drop-shadow-sm"
-                                            : 'text-slate-600'
-                                        }`}>
+                                        <span className="font-['Orbitron'] bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 drop-shadow-sm tracking-wider text-lg md:text-xl font-bold mt-1">
                                             Teaching Design Aids Prompt Builder
                                         </span>
-                                        <span className={`text-base md:text-lg font-bold tracking-[0.2em] mt-1 ${
-                                            theme === 'cyber' 
-                                            ? "text-cyan-500 font-['Orbitron'] opacity-80"
-                                            : 'text-slate-400'
-                                        }`}>
+                                        <span className="text-base md:text-lg text-cyan-500 font-bold font-['Orbitron'] tracking-[0.2em] mt-1 opacity-80">
                                             [ TDA Prompt Builder ]
                                         </span>
                                     </div>
                                 </h1>
-                                <p className={`mt-3 font-medium pl-0 md:pl-[3.5rem] flex items-center gap-2 ${
-                                    theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'
-                                }`}>
+                                <p className="text-slate-400 mt-3 font-medium pl-0 md:pl-[3.5rem] flex items-center gap-2">
                                     <Zap size={16} className="text-yellow-400" />
                                     3 分鐘設計專屬教材：輸入需求，自動生成工程師級的開發指令。
                                 </p>
                             </div>
-                            <div className="flex flex-col items-end gap-2">
-                                <button 
-                                    onClick={toggleTheme}
-                                    className={`p-2 rounded-full transition-all duration-300 ${
-                                        theme === 'cyber' 
-                                        ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700 border border-slate-700' 
-                                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-sm'
-                                    }`}
-                                    title={theme === 'cyber' ? "切換至簡潔模式" : "切換至科技模式"}
-                                >
-                                    {theme === 'cyber' ? <Sun size={20} /> : <Moon size={20} />}
-                                </button>
-                                <div className={`hidden md:flex px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 tracking-wider ${
-                                    theme === 'cyber'
-                                    ? 'border border-cyan-500/50 bg-cyan-950/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)] orbitron'
-                                    : 'bg-slate-100 text-slate-600 border border-slate-200'
-                                }`}>
+                            <div className="hidden md:block mt-2">
+                                <div className="px-4 py-2 rounded-full border border-cyan-500/50 bg-cyan-950/30 text-sm font-bold text-cyan-400 flex items-center gap-2 shadow-[0_0_10px_rgba(6,182,212,0.2)] orbitron tracking-wider">
                                     <Bot size={16} />
                                     v1.0
                                 </div>
@@ -1103,19 +933,15 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                         {/* Progress Bar */}
                         <div className="mb-8">
-                            <div className={`flex justify-between text-xs font-bold mb-2 uppercase tracking-wider ${theme === 'cyber' ? 'orbitron text-slate-500' : 'text-slate-400'}`}>
-                                <span className={step >= 1 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>基本資料</span>
-                                <span className={step >= 2 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>內容情境</span>
-                                <span className={step >= 3 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>規則設定</span>
-                                <span className={step >= 4 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>完成生成</span>
+                            <div className="flex justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider orbitron">
+                                <span className={step >= 1 ? "text-cyan-400 text-glow-cyan" : ""}>基本資料</span>
+                                <span className={step >= 2 ? "text-cyan-400 text-glow-cyan" : ""}>內容情境</span>
+                                <span className={step >= 3 ? "text-cyan-400 text-glow-cyan" : ""}>規則設定</span>
+                                <span className={step >= 4 ? "text-cyan-400 text-glow-cyan" : ""}>完成生成</span>
                             </div>
-                            <div className={`h-2 rounded-full overflow-hidden ${theme === 'cyber' ? 'bg-slate-800 border border-slate-700/50' : 'bg-slate-200'}`}>
+                            <div className="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
                                 <motion.div 
-                                    className={`h-full ${
-                                        theme === 'cyber' 
-                                        ? 'bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]'
-                                        : 'bg-blue-600'
-                                    }`}
+                                    className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
                                     initial={{ width: "0%" }}
                                     animate={{ width: `${(step / 4) * 100}%` }}
                                     transition={{ duration: 0.3 }}
@@ -1124,7 +950,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         </div>
 
                         {/* Wizard Card */}
-                        <Card theme={theme} className="min-h-[500px] flex flex-col">
+                        <Card className="min-h-[500px] flex flex-col">
                             <div className="p-6 md:p-8 flex-1">
                                 <AnimatePresence mode="wait">
                                     {step === 1 && renderStep1()}
@@ -1135,17 +961,11 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                             </div>
 
                             {/* Footer Controls */}
-                            <div className={`p-6 flex justify-between items-center backdrop-blur-sm border-t ${
-                                theme === 'cyber' ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-100'
-                            }`}>
+                            <div className="bg-slate-900/50 border-t border-slate-800 p-6 flex justify-between items-center backdrop-blur-sm">
                                 {step > 1 ? (
                                     <button 
                                         onClick={() => setStep(step - 1)}
-                                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-                                            theme === 'cyber'
-                                            ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                                            : 'text-slate-600 hover:bg-white hover:shadow-sm'
-                                        }`}
+                                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
                                     >
                                         <ChevronLeft size={20} />
                                         上一步
@@ -1157,11 +977,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 {step < 4 ? (
                                     <button 
                                         onClick={() => setStep(step + 1)}
-                                        className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 group text-white ${
-                                            theme === 'cyber'
-                                            ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
-                                            : 'bg-blue-600 hover:bg-blue-700 shadow-md'
-                                        }`}
+                                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all hover:scale-105 active:scale-95 group"
                                     >
                                         下一步
                                         <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -1172,11 +988,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                             setStep(1);
                                             setCopied(false);
                                         }}
-                                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-                                            theme === 'cyber'
-                                            ? 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800'
-                                            : 'text-slate-500 hover:text-blue-600 hover:bg-white hover:shadow-sm'
-                                        }`}
+                                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-all"
                                     >
                                         <RotateCcw size={18} />
                                         重新設計
@@ -1187,67 +999,29 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                         {/* Extra Links Above Footer */}
                         <div className="mt-12 flex flex-wrap justify-center gap-4">
-                            {/* Base44 Link */}
-                            <a href="https://base44.com/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
-                                theme === 'cyber'
-                                ? 'border-cyan-500/30 bg-cyan-900/20 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-100'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 shadow-sm'
-                            }`}>
+                            <a href="https://base44.com/" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg border border-cyan-500/30 bg-cyan-900/20 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-100 transition-all text-sm font-medium flex items-center gap-2">
                                 Base44 <ExternalLink size={14} />
                             </a>
-                            
-                            {/* Emergent Link */}
-                            <a href="https://app.emergent.sh/home" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
-                                theme === 'cyber'
-                                ? 'border-purple-500/30 bg-purple-900/20 text-purple-300 hover:bg-purple-500/20 hover:text-purple-100'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-purple-600 shadow-sm'
-                            }`}>
+                            <a href="https://app.emergent.sh/home" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg border border-purple-500/30 bg-purple-900/20 text-purple-300 hover:bg-purple-500/20 hover:text-purple-100 transition-all text-sm font-medium flex items-center gap-2">
                                 Emergent <ExternalLink size={14} />
                             </a>
-                            
-                            {/* v0.app Link */}
-                            <a href="https://v0.app/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
-                                theme === 'cyber'
-                                ? 'border-slate-500/30 bg-slate-800/20 text-slate-300 hover:bg-slate-700/40 hover:text-slate-100'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm'
-                            }`}>
+                            <a href="https://v0.app/" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg border border-slate-500/30 bg-slate-800/20 text-slate-300 hover:bg-slate-700/40 hover:text-slate-100 transition-all text-sm font-medium flex items-center gap-2">
                                 v0.app <ExternalLink size={14} />
                             </a>
-                            
-                            {/* Gemini Link */}
-                            <a href="https://gemini.google.com/gem/brainstormer" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
-                                theme === 'cyber'
-                                ? 'border-blue-500/30 bg-blue-900/20 text-blue-300 hover:bg-blue-500/20 hover:text-blue-100'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 shadow-sm'
-                            }`}>
+                            <a href="https://gemini.google.com/gem/brainstormer" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg border border-blue-500/30 bg-blue-900/20 text-blue-300 hover:bg-blue-500/20 hover:text-blue-100 transition-all text-sm font-medium flex items-center gap-2">
                                 Gemini <ExternalLink size={14} />
-                            </a>
-
-                            {/* Lovable Link */}
-                            <a href="https://lovable.dev/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
-                                theme === 'cyber'
-                                ? 'border-pink-500/30 bg-pink-900/20 text-pink-300 hover:bg-pink-500/20 hover:text-pink-100'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-pink-600 shadow-sm'
-                            }`}>
-                                Lovable (不能分享) <ExternalLink size={14} />
                             </a>
                         </div>
 
                         {/* Footer */}
-                        <footer className={`mt-6 py-6 text-center text-xs font-medium tracking-widest ${
-                            theme === 'cyber' ? 'text-slate-600 orbitron' : 'text-slate-400'
-                        }`}>
+                        <footer className="mt-6 py-6 text-center text-slate-600 text-xs font-medium orbitron tracking-widest">
                             © 2025 Ken Cheng | Created with Gemini Script & Tailwind CSS
                         </footer>
 
                         {/* Floating Action Button (FAB) */}
                         <div className="fixed bottom-6 right-6 z-50">
-                            <button className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-md transition-all hover:scale-105 group ${
-                                theme === 'cyber'
-                                ? 'border-white/20 bg-gradient-to-r from-cyan-600/80 via-blue-600/80 to-purple-600/80 animate-holo text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:shadow-[0_0_25px_rgba(6,182,212,0.8)]'
-                                : 'bg-white border-slate-200 text-slate-700 shadow-lg hover:shadow-xl'
-                            }`}>
-                                <Monitor size={20} className={theme === 'cyber' ? "group-hover:animate-pulse" : ""} />
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 backdrop-blur-md bg-gradient-to-r from-cyan-600/80 via-blue-600/80 to-purple-600/80 animate-holo text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:shadow-[0_0_25px_rgba(6,182,212,0.8)] transition-all hover:scale-105 group">
+                                <Monitor size={20} className="group-hover:animate-pulse" />
                                 <span className="font-bold text-sm tracking-wide text-shadow-sm">Ken Cheng設計</span>
                             </button>
                         </div>
