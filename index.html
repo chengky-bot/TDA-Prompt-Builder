@@ -10,6 +10,9 @@
     
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- DOCX Library for Word Export -->
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -168,7 +171,7 @@
     <!-- React Application Script -->
     <script type="text/babel" data-type="module">
         // FIX: Explicitly defined dependencies to ensure a singleton React instance
-        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
         import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
         import { motion, AnimatePresence } from 'https://esm.sh/framer-motion@10.16.4?deps=react@18.2.0,react-dom@18.2.0';
         import { 
@@ -197,7 +200,10 @@
             ExternalLink,
             Sun,
             Moon,
-            Github
+            Github,
+            FileJson, 
+            FileText,
+            Upload // Added Upload icon
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
@@ -317,6 +323,7 @@ c. 正向語言與建設性建議
             const [step, setStep] = useState(1);
             const [copied, setCopied] = useState(false);
             const [theme, setTheme] = useState('cyber');
+            const fileInputRef = useRef(null); // Ref for file input
 
             useEffect(() => {
                 document.body.className = `theme-${theme}`;
@@ -442,7 +449,6 @@ c. 正向語言與建設性建議
                 { value: "高階", label: "高階" }
             ];
 
-            // Logic to handle Rule changes
             const handleRuleChange = (index, value) => {
                 const newRules = [...formData.rules];
                 newRules[index] = value;
@@ -458,7 +464,6 @@ c. 正向語言與建設性建議
                 setFormData({ ...formData, rules: newRules });
             };
 
-            // Logic to handle Example changes
             const handleExampleChange = (index, field, value) => {
                 const newExamples = [...formData.examples];
                 newExamples[index] = { ...newExamples[index], [field]: value };
@@ -474,7 +479,6 @@ c. 正向語言與建設性建議
                 setFormData({ ...formData, examples: newExamples });
             };
 
-            // Generic Helper to toggle array selections
             const toggleSelection = (field, item) => {
                 setFormData(prev => {
                     const current = prev[field];
@@ -486,16 +490,13 @@ c. 正向語言與建設性建議
                 });
             };
 
-            // Generate the Master Prompt
             const generatePrompt = () => {
                 const rulesList = formData.rules.filter(r => r.trim() !== "").map((r, i) => `${i + 1}. ${r}`).join("\n    ");
                 const examplesList = formData.examples.filter(ex => ex.text.trim() !== "").map((ex, i) => `* [${ex.level}] ${ex.text}`).join("\n    ");
                 const isGame = formData.category === "教學遊戲";
                 
-                // Determine the subject display string
                 const subject = formData.subjectCategory === "其他" ? formData.subjectCustomInput : formData.subjectCategory;
 
-                // Determine game style display string (Multi-select)
                 let styles = [...formData.gameStyle];
                 if (styles.includes("其他")) {
                     styles = styles.filter(s => s !== "其他");
@@ -505,7 +506,6 @@ c. 正向語言與建設性建議
                 }
                 const style = styles.length > 0 ? styles.join("、") : "未指定";
                 
-                // Determine the interaction display string (Multi-select)
                 let interactions = [...formData.interactionType];
                 if (interactions.includes("其他")) {
                     interactions = interactions.filter(i => i !== "其他");
@@ -515,13 +515,11 @@ c. 正向語言與建設性建議
                 }
                 const interaction = interactions.length > 0 ? interactions.join("、") : "未指定";
 
-                // Determine Learning Diversity string
                 const diversityList = formData.learningDiversity.map(opt => {
                     const option = learningDiversityOptions.find(o => o.label === opt);
                     return `* **${opt}**：${option ? option.desc : ""}`;
                 }).join("\n    ");
 
-                // Determine Values string (Multi-select)
                 const valuesStr = formData.value.length > 0 ? formData.value.join("、") : "無";
                 
                 let prompt = `# 1. 角色設定 (Role)
@@ -621,7 +619,6 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 
-                // Ensure it's not visible but part of the DOM
                 textArea.style.position = "fixed";
                 textArea.style.left = "-9999px";
                 textArea.style.top = "0";
@@ -639,6 +636,74 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                 }
                 
                 document.body.removeChild(textArea);
+            };
+
+            // Handlers for Save JSON and Export DOCX
+            const handleSaveJSON = () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "tda_data.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            };
+
+            const handleExportDOCX = () => {
+                const promptText = generatePrompt();
+                const { Document, Packer, Paragraph, TextRun } = window.docx;
+                
+                const lines = promptText.split('\n');
+                const children = lines.map(line => new Paragraph({
+                    children: [new TextRun({
+                        text: line,
+                        font: "Arial"
+                    })],
+                }));
+
+                const doc = new Document({
+                    sections: [{
+                        properties: {},
+                        children: children,
+                    }],
+                });
+
+                Packer.toBlob(doc).then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'tda_prompt.docx';
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                });
+            };
+            
+            // Handler for Import JSON
+            const handleImportJSON = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        // Basic validation could be added here
+                        setFormData(json);
+                        alert("匯入成功！ (Import Successful)");
+                    } catch (error) {
+                        console.error("Error parsing JSON:", error);
+                        alert("匯入失敗，請確認檔案格式正確。 (Import Failed)");
+                    }
+                };
+                reader.readAsText(file);
+                
+                // Clear the input so the same file can be selected again
+                event.target.value = ''; 
+            };
+
+            // Trigger file input click
+            const triggerFileInput = () => {
+                fileInputRef.current.click();
             };
 
             // --- Step Rendering ---
@@ -1040,17 +1105,43 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 : 'bg-slate-50 text-slate-700 border-slate-200'
                             }`}
                         />
-                        <button 
-                            onClick={handleCopy}
-                            className={`absolute top-4 right-4 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
-                                theme === 'cyber'
-                                ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
-                                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
-                            }`}
-                        >
-                            {copied ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
-                            {copied ? "已複製！" : "複製內容"}
-                        </button>
+                        <div className="absolute top-4 right-4 flex gap-2">
+                             <button 
+                                onClick={handleSaveJSON}
+                                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                }`}
+                                title="儲存為 JSON 檔案"
+                            >
+                                <FileJson size={16} />
+                                <span className="hidden sm:inline">JSON</span>
+                            </button>
+                            <button 
+                                onClick={handleExportDOCX}
+                                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                }`}
+                                title="匯出為 DOCX 檔案"
+                            >
+                                <FileText size={16} />
+                                <span className="hidden sm:inline">DOCX</span>
+                            </button>
+                            <button 
+                                onClick={handleCopy}
+                                className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                }`}
+                            >
+                                {copied ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                                {copied ? "已複製！" : "複製內容"}
+                            </button>
+                        </div>
                     </div>
                 </motion.div>
             );
@@ -1115,6 +1206,26 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                     <Bot size={16} />
                                     v1.0
                                 </div>
+                                <button 
+                                    onClick={triggerFileInput}
+                                    className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 tracking-wider transition-all ${
+                                        theme === 'cyber'
+                                        ? 'border border-emerald-500/50 bg-emerald-950/30 text-emerald-400 hover:bg-emerald-900/50 shadow-[0_0_10px_rgba(16,185,129,0.2)] orbitron'
+                                        : 'bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200'
+                                    }`}
+                                    title="匯入 JSON 設定檔"
+                                >
+                                    <Upload size={16} />
+                                    匯入 JSON
+                                </button>
+                                {/* Hidden File Input */}
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={handleImportJSON} 
+                                    accept=".json" 
+                                    className="hidden" 
+                                />
                             </div>
                         </header>
 
