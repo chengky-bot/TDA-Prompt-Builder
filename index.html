@@ -283,9 +283,9 @@
             learningDiversity: [], 
             includePreferenceSettings: true, // Default to true
             examples: [
-                { text: "", level: "初階" },
-                { text: "", level: "中階" },
-                { text: "", level: "高階" } 
+                { text: "", level: "初階", count: 10 },
+                { text: "", level: "中階", count: 10 },
+                { text: "", level: "高階", count: 10 } 
             ],
             grade: "小學二年級 (P2)",
             senLevel: "輕度 (Mild)",
@@ -515,7 +515,7 @@ c. 正向語言與建設性建議
             };
 
             const addExample = () => {
-                setFormData({ ...formData, examples: [...formData.examples, { text: "", level: "初階" }] });
+                setFormData({ ...formData, examples: [...formData.examples, { text: "", level: "初階", count: 10 }] });
             };
 
             const removeExample = (index) => {
@@ -538,7 +538,7 @@ c. 正向語言與建設性建議
             // Generate the Master Prompt
             const generatePrompt = () => {
                 const rulesList = formData.rules.filter(r => r.trim() !== "").map((r, i) => `${i + 1}. ${r}`).join("\n    ");
-                const examplesList = formData.examples.filter(ex => ex.text.trim() !== "").map((ex, i) => `* [${ex.level}] ${ex.text}`).join("\n    ");
+                const examplesList = formData.examples.filter(ex => ex.text.trim() !== "").map((ex, i) => `* [${ex.level}] ${ex.text} (請生成 ${ex.count || 10} 題近似題目)`).join("\n    ");
                 const isGame = formData.category === "教學遊戲";
                 
                 // Determine the subject display string
@@ -898,12 +898,23 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                                             onChange={(e) => handleExampleChange(index, 'text', e.target.value)}
                                                         />
                                                     </div>
-                                                    <div className="w-28">
+                                                    <div className="w-24">
                                                         <Select 
                                                             theme={theme}
                                                             options={difficultyLevels}
                                                             value={ex.level}
                                                             onChange={(e) => handleExampleChange(index, 'level', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="w-20">
+                                                        <Input 
+                                                            theme={theme}
+                                                            type="number"
+                                                            min="1"
+                                                            max="100"
+                                                            placeholder="數量"
+                                                            value={ex.count}
+                                                            onChange={(e) => handleExampleChange(index, 'count', e.target.value)}
                                                         />
                                                     </div>
                                                     <button 
