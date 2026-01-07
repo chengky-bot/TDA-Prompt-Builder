@@ -328,39 +328,7 @@ c. 正向語言與建設性建議
 
             useEffect(() => {
                 document.body.className = `theme-${theme}`;
-
-                // --- SECURITY RESTRICTIONS START ---
-                const handleContextMenu = (e) => {
-                    e.preventDefault();
-                    alert("如有需要，請向WMC查詢");
-                };
-
-                const handleKeyDown = (e) => {
-                    // Block F12 (DevTools)
-                    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) { 
-                        e.preventDefault();
-                        return;
-                    }
-
-                    // Block Ctrl+C, Ctrl+U, Ctrl+S
-                    // Note: This does NOT block programmatic copy (like the "Copy" button)
-                    if (e.ctrlKey || e.metaKey) {
-                        const key = e.key.toLowerCase();
-                        if (key === 'c' || key === 'u' || key === 's') {
-                            e.preventDefault();
-                        }
-                    }
-                };
-
-                document.addEventListener('contextmenu', handleContextMenu);
-                document.addEventListener('keydown', handleKeyDown);
-
-                return () => {
-                    document.removeEventListener('contextmenu', handleContextMenu);
-                    document.removeEventListener('keydown', handleKeyDown);
-                };
-                // --- SECURITY RESTRICTIONS END ---
-
+                // Security restrictions removed
             }, [theme]);
             
             // Initialize state using the generator function
