@@ -389,7 +389,7 @@ c. 正向語言與建設性建議
 
             const interactionTypes = [
                 // 基礎題型 REMOVED
-                // "找詞遊戲 (Word Search Puzzle)", // Removed from here
+                "找詞遊戲 (Word Search Puzzle)", 
                 
                 // 操作與排序
                 "點擊 (Click)",
@@ -397,7 +397,7 @@ c. 正向語言與建設性建議
                 "拖拉排序 (Drag & Drop Ordering)",
                 "連線題 (Connect the Dots)",
                 "圖詞配對 (Matching)",
-                // "翻卡 / 翻牌記憶配對 (Memory Flip Cards)", // Removed
+                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)",
                 "滑桿調節 / 數值控制 (Slider Control)",
                 "旋轉 / 放大物件",
                 
@@ -534,9 +534,15 @@ c. 正向語言與建設性建議
                 const isGame = formData.category === "教學遊戲";
                 
                 const subject = formData.subjectCategory === "其他" ? formData.subjectCustomInput : formData.subjectCategory;
-                
-                // Game Style is now a single string
-                const style = formData.gameStyle === "其他" ? formData.gameStyleCustomInput : formData.gameStyle;
+
+                let styles = [...formData.gameStyle];
+                if (styles.includes("其他")) {
+                    styles = styles.filter(s => s !== "其他");
+                    if (formData.gameStyleCustomInput.trim()) {
+                        styles.push(formData.gameStyleCustomInput);
+                    }
+                }
+                const style = styles.length > 0 ? styles.join("、") : "未指定";
                 
                 let interactions = [...formData.interactionType];
                 if (interactions.includes("其他")) {
@@ -667,7 +673,7 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
         - **功能一**：字體大小（6級）：小小的(14px)｜小一點(16px)｜剛剛好(18px)｜大一點(22px)｜大大的(26px)｜超～大(32px)。
         - **功能二**：說話速度（6級）：0.5｜0.6｜0.7｜0.8｜0.9｜1.0（倍速），標題：「說話速度」，輔助視覺：左側標註 🐢「慢慢說」，右側標註 🐇「快快說」。`;
 
-                let prompt = `根據你的建議，全部實行。
+                let prompt = `根據你的建議，
 
 # 6. 技術規格 (Technical Stack)
 請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：
@@ -681,9 +687,7 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
     * **🔊 語音功能**: 有on/off功能, 若實作 \`speak\` 函式，請將 \`lang\` 預設值設為 \`'zh-HK'\`。
     ${formData.includePreferenceSettings ? preferenceSettingsText : ""}
     * **⬅️ 導航**: 左上方必須有一個顯眼的「返回主頁」按鈕。
-    * **💾 儲存 (Download HTML)**: 提供使用者一鍵下載當前網頁完整 HTML 原始碼的能力，便於教師備份教學頁面、開發者除錯或存檔原型設計。
-        - 位置：左下角固定於瀏覽器視窗左下角，距離左邊界與底邊界各 20px。
-        - 按鈕外觀：文字「⬇️ 下載 HTML」，字型大小 16px，背景色根據版面背景自然調節，圓角 6px。
+    * **💾 儲存 (Download HTML)**: 於主頁左下角設置提供「⬇️ 下載 HTML」按鈕，供使用者一鍵下載當前網頁完整 HTML 原始碼的能力，便於教師備份教學頁面。
     * **🦶 頁尾與版權 (Footer)**: 頁面最底端顯示置中文字：\`©2025 WMC\`。
     * **🏷️ 懸浮標籤 (FAB)**: 
         - 位置：右下角固定 (Fixed)。
