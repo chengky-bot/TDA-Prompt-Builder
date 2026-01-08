@@ -75,7 +75,7 @@
             opacity: 1;
         }
 
-        /* Scrollbar - Conditional styling via CSS variables or specific overrides */
+        /* Scrollbar */
         body.theme-cyber textarea::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
         body.theme-cyber textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; border: 1px solid #06b6d4; }
         body.theme-cyber textarea::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
@@ -203,7 +203,8 @@
             Github,
             FileJson, 
             FileText,
-            Upload 
+            Upload,
+            AlertCircle
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
@@ -277,9 +278,9 @@
             category: "教學遊戲", 
             subjectCategory: "語文", 
             subjectCustomInput: "", 
-            gameStyle: ["扭蛋機 (Gachapon)"], 
+            gameStyle: "扭蛋機 (Gachapon)", // Changed back to String for Single Select
             gameStyleCustomInput: "", 
-            interactionType: ["3選1答案"], 
+            interactionType: ["點擊 (Click)"], 
             interactionCustomInput: "", 
             learningDiversity: [], 
             includePreferenceSettings: true, // Default to true
@@ -374,6 +375,8 @@ c. 正向語言與建設性建議
                 "放天燈 / 孔明燈 (Sky Lantern)", 
                 "祈福牆 / 願望板 (Wish Wall)", 
                 "香爐 / 點香祈福 (Incense Offering)", 
+                "找詞遊戲 (Word Search Puzzle)", // Moved here
+                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)", // Moved here
                 "其他"
             ];
             
@@ -382,13 +385,11 @@ c. 正向語言與建設性建議
                  { value: "4選1答案", label: "4選1答案" },
                  { value: "多選題", label: "多選題" },
                  { value: "輸入文字 (Text Input)", label: "輸入文字 (Text Input)" },
-                 { value: "找詞遊戲 (Word Search Puzzle)", label: "找詞遊戲 (Word Search Puzzle)" },
                  { value: "其他", label: "其他" }
             ];
 
             const interactionTypes = [
-                // 基礎題型 REMOVED
-                "找詞遊戲 (Word Search Puzzle)", 
+                // 基礎題型 REMOVED (找詞遊戲 also removed from here and moved to gameStyle)
                 
                 // 操作與排序
                 "點擊 (Click)",
@@ -396,7 +397,7 @@ c. 正向語言與建設性建議
                 "拖拉排序 (Drag & Drop Ordering)",
                 "連線題 (Connect the Dots)",
                 "圖詞配對 (Matching)",
-                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)",
+                // "翻卡 / 翻牌記憶配對 (Memory Flip Cards)", // Removed
                 "滑桿調節 / 數值控制 (Slider Control)",
                 "旋轉 / 放大物件",
                 
@@ -509,6 +510,23 @@ c. 正向語言與建設性建議
                 });
             };
 
+            // Validate Step function
+            const validateStep = () => {
+                if (step === 2) {
+                    if (!formData.purpose || formData.purpose.trim() === "") {
+                        alert("請填寫「核心用途 (Core Purpose)」。\n這是設計教學工具最重要的部分！");
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            const handleNext = () => {
+                if (validateStep()) {
+                    setStep(step + 1);
+                }
+            };
+
             // Generate the Master Prompt
             const generateDesignPrompt = () => {
                 const rulesList = formData.rules.filter(r => r.trim() !== "").map((r, i) => `${i + 1}. ${r}`).join("\n    ");
@@ -516,17 +534,10 @@ c. 正向語言與建設性建議
                 const isGame = formData.category === "教學遊戲";
                 
                 const subject = formData.subjectCategory === "其他" ? formData.subjectCustomInput : formData.subjectCategory;
-
-                let styles = [...formData.gameStyle];
-                if (styles.includes("其他")) {
-                    styles = styles.filter(s => s !== "其他");
-                    if (formData.gameStyleCustomInput.trim()) {
-                        styles.push(formData.gameStyleCustomInput);
-                    }
-                }
-                const style = styles.length > 0 ? styles.join("、") : "未指定";
                 
-                // Interaction Logic
+                // Game Style is now a single string
+                const style = formData.gameStyle === "其他" ? formData.gameStyleCustomInput : formData.gameStyle;
+                
                 let interactions = [...formData.interactionType];
                 if (interactions.includes("其他")) {
                     interactions = interactions.filter(i => i !== "其他");
@@ -582,12 +593,12 @@ c. 正向語言與建設性建議
 * **工具名稱**：${formData.toolName || "[未命名工具]"}
 * **工具範疇**：${formData.category}
 * **科目**：${subject || "未指定"}
-${isGame ? `* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)
-    * **遊戲機制說明**：「遊戲階段」：純粹遊戲(無知識），僅作為學習間的動機調節器，所有知識傳遞僅發生於問答彈窗。「遊戲－問答交替循環」模式， 進行遊戲機制後會彈出一個問題， 無論答對或答錯，皆給予即時回饋，並返回下一個關卡，此循環持續進行，直到完成預設題數。` : ""}
+* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)
+    ${isGame ? `* **遊戲機制說明**：「遊戲階段」：純粹遊戲(無知識），僅作為學習間的動機調節器，所有知識傳遞僅發生於問答彈窗。「遊戲－問答交替循環」模式， 進行遊戲機制後會彈出一個問題， 無論答對或答錯，皆給予即時回饋，並返回下一個關卡，此循環持續進行，直到完成預設題數。` : ""}
 * **互動機制**：${interaction}
 ${isGame ? `* **遊戲模式需求**：請生成 **三種遊戲模式**，每種模式需分開 **初階、中階、高階** 三種難度。` : ""}
-${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}` : ""}
-* **核心用途**：${formData.purpose || "尚未填寫用途"}
+${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}` : ""}
+* **核心用途**：${formData.purpose}
 * **目標學生年級**：${formData.grade}
 * **支援需求 (SEN Support)**：${formData.senLevel}
     * *邏輯設定：「中度」需更多視覺輔助、少字多圖、詞彙簡單；「輕度」可包含較多文字說明。*
@@ -806,13 +817,13 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="col-span-1 md:col-span-2">
-                             <Label theme={theme}>1. 教職員名字 (Teacher Name)</Label>
-                             <Input 
-                                 theme={theme}
-                                 placeholder="請輸入您的名字 (例如: 陳老師)" 
-                                 value={formData.teacherName}
-                                 onChange={(e) => setFormData({...formData, teacherName: e.target.value})}
-                             />
+                            <Label theme={theme}>1. 教職員名字 (Teacher Name)</Label>
+                            <Input 
+                                theme={theme}
+                                placeholder="請輸入您的名字 (例如: 陳老師)" 
+                                value={formData.teacherName}
+                                onChange={(e) => setFormData({...formData, teacherName: e.target.value})}
+                            />
                         </div>
 
                         <div className="col-span-1 md:col-span-2">
@@ -870,63 +881,61 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 )}
                             </div>
 
-                            {/* Game Style Selection - Only for "教學遊戲" */}
-                            {formData.category === "教學遊戲" && (
-                                <motion.div 
-                                    initial={{ opacity: 0, height: 0 }} 
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    className="mt-6 space-y-4"
-                                >
-                                    {/* Game Style */}
-                                    <div>
-                                        <Label theme={theme}>遊戲風格 (Game Style) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {gameStyles.map(style => (
-                                                <button
-                                                    key={style}
-                                                    onClick={() => toggleSelection('gameStyle', style)}
-                                                    className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
-                                                        theme === 'cyber'
-                                                        ? formData.gameStyle.includes(style)
-                                                            ? 'border-pink-500 bg-pink-900/30 text-pink-200 ring-1 ring-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.3)]' 
-                                                            : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
-                                                        : formData.gameStyle.includes(style)
-                                                            ? 'border-pink-500 bg-pink-50 text-pink-700 ring-1 ring-pink-500'
-                                                            : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
-                                                    }`}
-                                                >
-                                                    {style}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        {formData.gameStyle.includes("其他") && (
-                                            <div className="mt-2">
-                                                <Input
-                                                    theme={theme}
-                                                    placeholder="請輸入遊戲風格 (例如：射擊遊戲、迷宮)..."
-                                                    value={formData.gameStyleCustomInput}
-                                                    onChange={(e) => setFormData({...formData, gameStyleCustomInput: e.target.value})}
-                                                    autoFocus
-                                                />
-                                            </div>
-                                        )}
+                            {/* Game Style Selection - Always Visible */}
+                            <div className="mt-6 space-y-4">
+                                <div>
+                                    <Label theme={theme}>遊戲風格 (Game Style)</Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {gameStyles.map(style => (
+                                            <button
+                                                key={style}
+                                                onClick={() => setFormData({...formData, gameStyle: style})}
+                                                className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
+                                                    theme === 'cyber'
+                                                    ? formData.gameStyle === style
+                                                        ? 'border-pink-500 bg-pink-900/30 text-pink-200 ring-1 ring-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.3)]' 
+                                                        : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                                    : formData.gameStyle === style
+                                                        ? 'border-pink-500 bg-pink-50 text-pink-700 ring-1 ring-pink-500'
+                                                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                                }`}
+                                            >
+                                                {style}
+                                            </button>
+                                        ))}
                                     </div>
+                                    {formData.gameStyle === "其他" && (
+                                        <div className="mt-2">
+                                            <Input
+                                                theme={theme}
+                                                placeholder="請輸入遊戲風格 (例如：射擊遊戲、迷宮)..."
+                                                value={formData.gameStyleCustomInput}
+                                                onChange={(e) => setFormData({...formData, gameStyleCustomInput: e.target.value})}
+                                                autoFocus
+                                            />
+                                        </div>
+                                    )}
+                                </div>
 
-                                    {/* Example Questions */}
-                                    <div>
-                                        <Label theme={theme}>範例題目 (Example Questions)</Label>
-                                        <div className="space-y-3">
-                                            {formData.examples.map((ex, index) => (
-                                                <div key={index} className="flex gap-2 items-center">
-                                                    <div className="flex-1">
-                                                        <textarea 
-                                                            className={`w-full px-4 py-3 rounded-xl outline-none min-h-[150px] resize-y ${theme === 'cyber' ? 'tech-input' : 'plain-input'}`}
-                                                            placeholder={`例如：蘋果是甚麼顏色？`}
-                                                            value={ex.text}
-                                                            onChange={(e) => handleExampleChange(index, 'text', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="w-20">
+                                {/* Example Questions - Updated Layout */}
+                                <div>
+                                    <Label theme={theme}>範例題目 (Example Questions)</Label>
+                                    <div className="space-y-4">
+                                        {formData.examples.map((ex, index) => (
+                                            <div key={index} className={`p-4 rounded-xl border ${theme === 'cyber' ? 'border-slate-700 bg-slate-800/30' : 'border-slate-200 bg-white'} space-y-3`}>
+                                                <div className="w-full">
+                                                    <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>題目內容</div>
+                                                    <textarea 
+                                                        className={`w-full px-4 py-3 rounded-xl outline-none min-h-[80px] resize-y ${theme === 'cyber' ? 'tech-input' : 'plain-input'}`}
+                                                        placeholder={`例如：蘋果是甚麼顏色？`}
+                                                        value={ex.text}
+                                                        onChange={(e) => handleExampleChange(index, 'text', e.target.value)}
+                                                    />
+                                                </div>
+                                                
+                                                <div className="flex flex-wrap gap-2 items-center">
+                                                    <div className="w-24">
+                                                        <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>難度</div>
                                                         <Select 
                                                             theme={theme}
                                                             options={difficultyLevels}
@@ -934,7 +943,8 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                                             onChange={(e) => handleExampleChange(index, 'level', e.target.value)}
                                                         />
                                                     </div>
-                                                    <div className="w-32">
+                                                    <div className="flex-1 min-w-[140px]">
+                                                        <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>答題機制</div>
                                                         <Select 
                                                             theme={theme}
                                                             options={answerMechanismOptions}
@@ -942,7 +952,8 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                                             onChange={(e) => handleExampleChange(index, 'mechanism', e.target.value)}
                                                         />
                                                     </div>
-                                                    <div className="w-16">
+                                                    <div className="w-20">
+                                                        <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>數量</div>
                                                         <Input 
                                                             theme={theme}
                                                             type="number"
@@ -953,35 +964,36 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                                             onChange={(e) => handleExampleChange(index, 'count', e.target.value)}
                                                         />
                                                     </div>
-                                                    <button 
-                                                        onClick={() => removeExample(index)}
-                                                        className={`p-3 rounded-xl transition-colors border border-transparent ${
-                                                            theme === 'cyber'
-                                                            ? 'text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:border-red-500/50'
-                                                            : 'text-red-500 hover:bg-red-50 hover:border-red-200'
-                                                        }`}
-                                                        disabled={formData.examples.length === 1}
-                                                        title="移除範例"
-                                                    >
-                                                        <Trash2 size={20} />
-                                                    </button>
+                                                    <div className="flex items-end pb-1">
+                                                         <button 
+                                                            onClick={() => removeExample(index)}
+                                                            className={`p-3 rounded-xl transition-colors border border-transparent ${
+                                                                theme === 'cyber'
+                                                                ? 'text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:border-red-500/50'
+                                                                : 'text-red-500 hover:bg-red-50 hover:border-red-200'
+                                                            }`}
+                                                            disabled={formData.examples.length === 1}
+                                                            title="移除範例"
+                                                        >
+                                                            <Trash2 size={20} />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                        <button 
-                                            onClick={addExample}
-                                            className={`mt-3 text-sm font-bold flex items-center px-4 py-2 rounded-lg border border-transparent transition-all ${
-                                                theme === 'cyber'
-                                                ? 'text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/30 hover:border-cyan-500/50'
-                                                : 'text-blue-600 hover:bg-blue-50 hover:border-blue-200'
-                                            }`}
-                                        >
-                                            <Plus size={16} className="mr-1" /> 新增範例
-                                        </button>
+                                            </div>
+                                        ))}
                                     </div>
-
-                                </motion.div>
-                            )}
+                                    <button 
+                                        onClick={addExample}
+                                        className={`mt-3 text-sm font-bold flex items-center px-4 py-2 rounded-lg border border-transparent transition-all ${
+                                            theme === 'cyber'
+                                            ? 'text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/30 hover:border-cyan-500/50'
+                                            : 'text-blue-600 hover:bg-blue-50 hover:border-blue-200'
+                                        }`}
+                                    >
+                                        <Plus size={16} className="mr-1" /> 新增範例
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="space-y-6">
@@ -1098,13 +1110,14 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
             const renderStep2 = () => (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                     <div>
-                        <Label theme={theme}>5. 核心用途 (Core Purpose)</Label>
-                        <div className={`text-xs mb-2 ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>請簡述這個工具要解決什麼問題？</div>
+                        <Label theme={theme}>5. 核心用途 (Core Purpose) <span className="text-red-500">*</span></Label>
+                        <div className={`text-xs mb-2 ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>請簡述這個工具要解決什麼問題？(必填)</div>
                         <TextArea 
                             theme={theme}
                             placeholder="例如：讓學生透過拖放蘋果來練習 10 以內的加法，或是幫助自閉症學生指認當下的情緒..." 
                             value={formData.purpose}
                             onChange={(e) => setFormData({...formData, purpose: e.target.value})}
+                            className={!formData.purpose && step === 2 ? "border-red-500/50" : ""}
                         />
                     </div>
 
@@ -1328,7 +1341,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
                                     theme === 'cyber'
                                     ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
-                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                    : 'bg-white hover:bg-slate-700 border-slate-200 hover:border-slate-300'
                                 }`}
                                 title="匯出為 DOCX 檔案"
                             >
@@ -1488,7 +1501,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                     {/* Right Side: Next Button */}
                                     <div className="w-1/3 flex justify-end">
                                         <button 
-                                            onClick={() => setStep(step + 1)}
+                                            onClick={handleNext}
                                             className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 group text-white ${
                                                 theme === 'cyber'
                                                 ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
