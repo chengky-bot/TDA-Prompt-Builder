@@ -272,6 +272,7 @@
 
         // Function to return fresh initial state
         const getInitialFormData = () => ({
+            teacherName: "",
             toolName: "",
             category: "教學遊戲", 
             subjectCategory: "語文", 
@@ -283,9 +284,9 @@
             learningDiversity: [], 
             includePreferenceSettings: true, // Default to true
             examples: [
-                { text: "", level: "初階", count: 10 },
-                { text: "", level: "中階", count: 10 },
-                { text: "", level: "高階", count: 10 } 
+                { text: "", level: "初階", count: 10, mechanism: "3選1答案" },
+                { text: "", level: "中階", count: 10, mechanism: "4選1答案" },
+                { text: "", level: "高階", count: 10, mechanism: "輸入文字 (Text Input)" } 
             ],
             grade: "小學二年級 (P2)",
             senLevel: "輕度 (Mild)",
@@ -322,13 +323,13 @@ c. 正向語言與建設性建議
 
         function App() {
             const [step, setStep] = useState(1);
-            const [copied, setCopied] = useState(false);
+            const [copiedDesign, setCopiedDesign] = useState(false);
+            const [copiedTech, setCopiedTech] = useState(false);
             const [theme, setTheme] = useState('cyber');
             const fileInputRef = useRef(null); // Ref for file input
 
             useEffect(() => {
                 document.body.className = `theme-${theme}`;
-                // Security restrictions removed
             }, [theme]);
             
             // Initialize state using the generator function
@@ -376,12 +377,17 @@ c. 正向語言與建設性建議
                 "其他"
             ];
             
+            const answerMechanismOptions = [
+                 { value: "3選1答案", label: "3選1答案" },
+                 { value: "4選1答案", label: "4選1答案" },
+                 { value: "多選題", label: "多選題" },
+                 { value: "輸入文字 (Text Input)", label: "輸入文字 (Text Input)" },
+                 { value: "找詞遊戲 (Word Search Puzzle)", label: "找詞遊戲 (Word Search Puzzle)" },
+                 { value: "其他", label: "其他" }
+            ];
+
             const interactionTypes = [
-                // 基礎題型
-                "3選1答案", 
-                "4選1答案", 
-                "多選題", 
-                "輸入文字 (Text Input)",
+                // 基礎題型 REMOVED
                 "找詞遊戲 (Word Search Puzzle)", 
                 
                 // 操作與排序
@@ -483,7 +489,7 @@ c. 正向語言與建設性建議
             };
 
             const addExample = () => {
-                setFormData({ ...formData, examples: [...formData.examples, { text: "", level: "初階", count: 10 }] });
+                setFormData({ ...formData, examples: [...formData.examples, { text: "", level: "初階", count: 10, mechanism: "3選1答案" }] });
             };
 
             const removeExample = (index) => {
@@ -504,15 +510,13 @@ c. 正向語言與建設性建議
             };
 
             // Generate the Master Prompt
-            const generatePrompt = () => {
+            const generateDesignPrompt = () => {
                 const rulesList = formData.rules.filter(r => r.trim() !== "").map((r, i) => `${i + 1}. ${r}`).join("\n    ");
-                const examplesList = formData.examples.filter(ex => ex.text.trim() !== "").map((ex, i) => `* [${ex.level}] ${ex.text} (請生成 ${ex.count || 10} 題近似題目)`).join("\n    ");
+                const examplesList = formData.examples.filter(ex => ex.text.trim() !== "").map((ex, i) => `* [${ex.level}] (${ex.mechanism}) ${ex.text} (請生成 ${ex.count || 10} 題近似題目)`).join("\n    ");
                 const isGame = formData.category === "教學遊戲";
                 
-                // Determine the subject display string
                 const subject = formData.subjectCategory === "其他" ? formData.subjectCustomInput : formData.subjectCategory;
 
-                // Determine game style display string (Multi-select)
                 let styles = [...formData.gameStyle];
                 if (styles.includes("其他")) {
                     styles = styles.filter(s => s !== "其他");
@@ -522,7 +526,7 @@ c. 正向語言與建設性建議
                 }
                 const style = styles.length > 0 ? styles.join("、") : "未指定";
                 
-                // Determine the interaction display string (Multi-select)
+                // Interaction Logic
                 let interactions = [...formData.interactionType];
                 if (interactions.includes("其他")) {
                     interactions = interactions.filter(i => i !== "其他");
@@ -532,23 +536,45 @@ c. 正向語言與建設性建議
                 }
                 const interaction = interactions.length > 0 ? interactions.join("、") : "未指定";
 
-                // Determine Learning Diversity string
                 const diversityList = formData.learningDiversity.map(opt => {
                     const option = learningDiversityOptions.find(o => o.label === opt);
                     return `* **${opt}**：${option ? option.desc : ""}`;
                 }).join("\n    ");
 
-                // Determine Values string (Multi-select)
                 const valuesStr = formData.value.length > 0 ? formData.value.join("、") : "無";
                 
-                // Preference Settings Text
-                const preferenceSettingsText = `* **🛠️ 偏好設定模組 (Preference Settings)**:
-        網頁右上角有一個隱藏式偏好設定模組，藍色正方形背景 + 白色三條水平滑桿圖示，點擊按鈕後，從右側或下方滑入/淡入彈出選單。
-        - **功能一**：字體大小（6級）：小小的(14px)｜小一點(16px)｜剛剛好(18px)｜大一點(22px)｜大大的(26px)｜超～大(32px)。
-        - **功能二**：說話速度（6級）：0.5｜0.6｜0.7｜0.8｜0.9｜1.0（倍速），標題：「說話速度」，輔助視覺：左側標註 🐢「慢慢說」，右側標註 🐇「快快說」。`;
-
                 let prompt = `# 1. 角色設定 (Role)
-你是一位擁有 15 年經驗的「資深前端工程師」與「教育科技 (EdTech) UX 專家」。你擅長製作介面直觀、互動性高且符合無障礙設計的網頁應用程式。
+你是一位擁有 15 年經驗的「資深前端工程師」與「教育科技（EdTech）UX 專家」，專注於為小學生至中學生（具特殊教育需求的學習者）設計直觀、高互動性且符合無障礙標準（WCAG 2.1）的網頁學習工具。你擅長使用 HTML5、CSS3 與 Vanilla JavaScript 開發輕量、響應式、無需外部依賴的應用，並偏好運用 Emoji、CSS 動畫、正向回饋機制 與多感官提示（如顏色、聲音、點擊動效）來提升學習動機與參與度。
+
+你的任務是協助教育工作者（如教師或課程設計者）打造一個在桌機與行動裝置上皆直觀易用的線上學習平台。請以顧問式口吻，具批判性及建設性思考角度，不要盲目服從，找到設計的邏輯問題、設計盲點，請特別從以下角度進行批判性檢視：
+•「檢視『遊戲－問答交替循環』機制是否邏輯清晰
+•模擬工具的機制是否直觀容易明白？
+•學習工具的排板是否有誤?
+• 行動裝置上的互動模式是否符合無障礙標準？
+
+分以下四部分回應：
+一.  核心設計原則：說明 3–4 項針對下文
+# 2. 專案參數配置 (Configuration)
+# 3. 設計與教育原則 (Design & Pedagogical Principles)
+# 4. 智能教學邏輯 (AI Scaffolding Logic)
+# 5. 遊戲化結算系統 (Game Over & Report)
+的關鍵 UX/UI 原則
+
+二.  畫面結構建議：針對
+# 2. 專案參數配置 (Configuration)
+# 3. 設計與教育原則 (Design & Pedagogical Principles)
+# 4. 智能教學邏輯 (AI Scaffolding Logic)
+# 5. 遊戲化結算系統 (Game Over & Report)
+，描述其響應式佈局、導航邏輯與視覺層級，並強調如何透過留白、大按鈕、柔和配色與字體選擇提升可讀性與舒適度。
+
+三.  互動活動範例：
+根據# 2. 專案參數配置 (Configuration)
+提供 1–2 個具體、可立即實作的互動活動設計（例如「拖放分類」或「點擊消除答題」），無障礙考量（如鍵盤導航支援）、以及如何呈現正向回饋（如答錯不懲罰、多次嘗試加分等成長型思維機制）。
+
+四、提供「高保真文字版介面藍圖」：
+以結構化文字（搭配 Emoji、縮排、區塊標示）模擬關鍵畫面（如遊戲主畫面、結算報告頁）的佈局、元件位置與互動狀態，並標註設計意圖（如「此處使用大按鈕確保觸控準確性」）。
+
+****「以下為專案配置，請據此分析」
 
 # 2. 專案參數配置 (Configuration)
 **請根據以下設定，構建程式的邏輯與內容：**
@@ -556,7 +582,8 @@ c. 正向語言與建設性建議
 * **工具名稱**：${formData.toolName || "[未命名工具]"}
 * **工具範疇**：${formData.category}
 * **科目**：${subject || "未指定"}
-${isGame ? `* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)` : ""}
+${isGame ? `* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)
+    * **遊戲機制說明**：「遊戲階段」：純粹遊戲(無知識），僅作為學習間的動機調節器，所有知識傳遞僅發生於問答彈窗。「遊戲－問答交替循環」模式， 進行遊戲機制後會彈出一個問題， 無論答對或答錯，皆給予即時回饋，並返回下一個關卡，此循環持續進行，直到完成預設題數。` : ""}
 * **互動機制**：${interaction}
 ${isGame ? `* **遊戲模式需求**：請生成 **三種遊戲模式**，每種模式需分開 **初階、中階、高階** 三種難度。` : ""}
 ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}` : ""}
@@ -618,10 +645,18 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 `;
                 }
 
-                const nextSectionNum = isGame ? 6 : 4;
+                return prompt;
+            };
 
-                prompt += `
-# ${nextSectionNum}. 技術規格 (Technical Stack)
+            // 2. Generate Technical Prompt (Step 6 + Execution)
+            const generateTechPrompt = () => {
+                 // Preference Settings Text
+                 const preferenceSettingsText = `* **🛠️ 偏好設定模組 (Preference Settings)**:
+        網頁右上角有一個隱藏式偏好設定模組，藍色正方形背景 + 白色三條水平滑桿圖示，點擊按鈕後，從右側或下方滑入/淡入彈出選單。
+        - **功能一**：字體大小（6級）：小小的(14px)｜小一點(16px)｜剛剛好(18px)｜大一點(22px)｜大大的(26px)｜超～大(32px)。
+        - **功能二**：說話速度（6級）：0.5｜0.6｜0.7｜0.8｜0.9｜1.0（倍速），標題：「說話速度」，輔助視覺：左側標註 🐢「慢慢說」，右側標註 🐇「快快說」。`;
+
+                let prompt = `# 6. 技術規格 (Technical Stack)
 請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：
 
 1.  **Core Framework**: React (Functional Components + Hooks).
@@ -637,36 +672,48 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
     * **🏷️ 懸浮標籤 (FAB)**: 
         - 位置：右下角固定 (Fixed)。
         - 樣式：使用彩虹般的全息色（holographic/iridescent），隨視角或時間微變，外框與文字，半透明材質，營造未來感。帶有電腦型圖示。
-        - 內容：「Build with WMC TDA」。
+        - 內容：「WMC ${formData.teacherName || 'TDA'} 設計」。
 
 # 執行任務 (Execution)
-請根據上述配置，編寫完整的程式碼。程式碼需包含完整的 UI 佈局、邏輯處理${isGame ? "、以及上述的三階 AI 回應內容模擬" : ""}。`;
-
+請根據上述配置，編寫完整的程式碼。程式碼需包含完整的 UI 佈局、邏輯處理${formData.category === "教學遊戲" ? "、以及上述的三階 AI 回應內容模擬" : ""}。`;
                 return prompt;
             };
 
-            const handleCopy = () => {
-                const text = generatePrompt();
+            const handleCopyDesign = () => {
+                const text = generateDesignPrompt();
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
-                
-                // Ensure it's not visible but part of the DOM
                 textArea.style.position = "fixed";
                 textArea.style.left = "-9999px";
-                textArea.style.top = "0";
-                
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
-                
                 try {
                     document.execCommand('copy');
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
+                    setCopiedDesign(true);
+                    setTimeout(() => setCopiedDesign(false), 2000);
                 } catch (err) {
                     console.error('Unable to copy', err);
                 }
-                
+                document.body.removeChild(textArea);
+            };
+
+            const handleCopyTech = () => {
+                const text = generateTechPrompt();
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setCopiedTech(true);
+                    setTimeout(() => setCopiedTech(false), 2000);
+                } catch (err) {
+                    console.error('Unable to copy', err);
+                }
                 document.body.removeChild(textArea);
             };
 
@@ -682,14 +729,17 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
             };
 
             const handleExportDOCX = () => {
-                const promptText = generatePrompt();
+                const designText = generateDesignPrompt();
+                const techText = generateTechPrompt();
+                const fullText = designText + "\n\n" + techText;
+
                 if (!window.docx) {
                      alert("DOCX library not loaded. Please try again later.");
                      return;
                 }
                 const { Document, Packer, Paragraph, TextRun } = window.docx;
                 
-                const lines = promptText.split('\n');
+                const lines = fullText.split('\n');
                 const children = lines.map(line => new Paragraph({
                     children: [new TextRun({
                         text: line || " ",
@@ -756,7 +806,17 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="col-span-1 md:col-span-2">
-                            <Label theme={theme}>1. 工具名稱 (Tool Name)</Label>
+                             <Label theme={theme}>1. 教職員名字 (Teacher Name)</Label>
+                             <Input 
+                                 theme={theme}
+                                 placeholder="請輸入您的名字 (例如: 陳老師)" 
+                                 value={formData.teacherName}
+                                 onChange={(e) => setFormData({...formData, teacherName: e.target.value})}
+                             />
+                        </div>
+
+                        <div className="col-span-1 md:col-span-2">
+                            <Label theme={theme}>2. 工具名稱 (Tool Name)</Label>
                             <Input 
                                 theme={theme}
                                 placeholder="例如：快樂農場加法練習、課堂情緒溫度計..." 
@@ -766,7 +826,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         </div>
 
                         <div>
-                            <Label theme={theme}>2. 工具範疇 (Category)</Label>
+                            <Label theme={theme}>3. 工具範疇 (Category)</Label>
                             <div className="grid grid-cols-1 gap-3">
                                 {categories.map((cat) => (
                                     <button
@@ -790,7 +850,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
            
                             {/* Subject Selection - Moved to top level */}
                             <div className="mt-6">
-                                <Label theme={theme}>3. 科目 (Subject)</Label>
+                                <Label theme={theme}>4. 科目 (Subject)</Label>
                                 <Select 
                                     theme={theme}
                                     options={subjects.map(s => ({value: s, label: s}))}
@@ -859,14 +919,14 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                             {formData.examples.map((ex, index) => (
                                                 <div key={index} className="flex gap-2 items-center">
                                                     <div className="flex-1">
-                                                        <Input 
-                                                            theme={theme}
+                                                        <textarea 
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none min-h-[150px] resize-y ${theme === 'cyber' ? 'tech-input' : 'plain-input'}`}
                                                             placeholder={`例如：蘋果是甚麼顏色？`}
                                                             value={ex.text}
                                                             onChange={(e) => handleExampleChange(index, 'text', e.target.value)}
                                                         />
                                                     </div>
-                                                    <div className="w-24">
+                                                    <div className="w-20">
                                                         <Select 
                                                             theme={theme}
                                                             options={difficultyLevels}
@@ -874,7 +934,15 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                                             onChange={(e) => handleExampleChange(index, 'level', e.target.value)}
                                                         />
                                                     </div>
-                                                    <div className="w-20">
+                                                    <div className="w-32">
+                                                        <Select 
+                                                            theme={theme}
+                                                            options={answerMechanismOptions}
+                                                            value={ex.mechanism}
+                                                            onChange={(e) => handleExampleChange(index, 'mechanism', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="w-16">
                                                         <Input 
                                                             theme={theme}
                                                             type="number"
@@ -918,7 +986,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
 
                         <div className="space-y-6">
                             <div>
-                                <Label theme={theme}>4. 目標年級 (Target Grade)</Label>
+                                <Label theme={theme}>5. 目標年級 (Target Grade)</Label>
                                 <Select 
                                     theme={theme}
                                     options={grades.map(g => ({value: g, label: g}))}
@@ -928,7 +996,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                             </div>
 
                             <div>
-                                <Label theme={theme}>5. 支援需求 (SEN Support)</Label>
+                                <Label theme={theme}>6. 支援需求 (SEN Support)</Label>
                                 <div className="grid grid-cols-1 gap-3">
                                     <button
                                         onClick={() => setFormData({...formData, senLevel: "輕度 (Mild)"})}
@@ -963,9 +1031,9 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 </div>
                             </div>
 
-                            {/* 6. Learning Diversity Support - New Section */}
+                            {/* 7. Learning Diversity Support - New Section */}
                             <div>
-                                <Label theme={theme}>6. 照顧學習差異 (Learning Diversity) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                                <Label theme={theme}>7. 照顧學習差異 (Learning Diversity) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {learningDiversityOptions.map(opt => (
                                         <button
@@ -989,9 +1057,9 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                             </div>
                         </div>
 
-                        {/* 7. Interaction Mechanism - Renumbered to 7 */}
+                        {/* 8. Interaction Mechanism - Renumbered to 8 */}
                         <div className={`col-span-1 md:col-span-2 pt-4 border-t ${theme === 'cyber' ? 'border-slate-800/50' : 'border-slate-200'}`}>
-                             <Label theme={theme}>7. 互動機制 (Interaction) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                             <Label theme={theme}>8. 互動機制 (Interaction) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                {interactionTypes.map(type => (
                                  <button
@@ -1186,17 +1254,63 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         </div>
                     </div>
 
-                    <div className="relative">
-                        <textarea 
-                            readOnly
-                            value={generatePrompt()}
-                            className={`w-full h-80 font-mono text-xs p-6 rounded-2xl outline-none resize-none leading-relaxed border shadow-inner ${
-                                theme === 'cyber'
-                                ? 'bg-slate-950 text-cyan-300 border-slate-800'
-                                : 'bg-slate-50 text-slate-700 border-slate-200'
-                            }`}
-                        />
-                        <div className="absolute top-4 right-4 flex gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[600px]">
+                        {/* Left Side: Design Prompt */}
+                        <div className="flex flex-col h-full">
+                            <div className={`flex items-center justify-between mb-2 ${theme === 'cyber' ? 'text-cyan-300' : 'text-slate-700'}`}>
+                                <span className="text-sm font-bold orbitron">Part 1: 設計與邏輯</span>
+                                <button 
+                                    onClick={handleCopyDesign}
+                                    className={`px-3 py-1 rounded-lg flex items-center gap-2 text-xs font-bold transition-all border shadow-sm ${
+                                        theme === 'cyber'
+                                        ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400'
+                                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                    }`}
+                                >
+                                    {copiedDesign ? <CheckCircle size={14} className="text-green-500" /> : <Copy size={14} />}
+                                    {copiedDesign ? "已複製" : "複製 Part 1"}
+                                </button>
+                            </div>
+                            <textarea 
+                                readOnly
+                                value={generateDesignPrompt()}
+                                className={`flex-1 w-full font-mono text-xs p-4 rounded-xl outline-none resize-none leading-relaxed border shadow-inner ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-950 text-cyan-300 border-slate-800'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                            />
+                        </div>
+
+                        {/* Right Side: Technical Prompt */}
+                        <div className="flex flex-col h-full">
+                            <div className={`flex items-center justify-between mb-2 ${theme === 'cyber' ? 'text-purple-300' : 'text-slate-700'}`}>
+                                <span className="text-sm font-bold orbitron">Part 2: 技術與執行</span>
+                                <button 
+                                    onClick={handleCopyTech}
+                                    className={`px-3 py-1 rounded-lg flex items-center gap-2 text-xs font-bold transition-all border shadow-sm ${
+                                        theme === 'cyber'
+                                        ? 'bg-slate-800/80 hover:bg-slate-700/80 text-purple-400 backdrop-blur-md border-purple-500/30 hover:border-purple-400'
+                                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                    }`}
+                                >
+                                    {copiedTech ? <CheckCircle size={14} className="text-green-500" /> : <Copy size={14} />}
+                                    {copiedTech ? "已複製" : "複製 Part 2"}
+                                </button>
+                            </div>
+                            <textarea 
+                                readOnly
+                                value={generateTechPrompt()}
+                                className={`flex-1 w-full font-mono text-xs p-4 rounded-xl outline-none resize-none leading-relaxed border shadow-inner ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-950 text-purple-300 border-slate-800'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 mt-4">
                              <button 
                                 onClick={handleSaveJSON}
                                 className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
@@ -1222,24 +1336,24 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                 <span className="hidden sm:inline">DOCX</span>
                             </button>
                             <button 
-                                onClick={handleCopy}
+                                onClick={() => setStep(3)} // Return to step 3
                                 className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
                                     theme === 'cyber'
                                     ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
                                     : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
                                 }`}
+                                title="返回上一步 (Step 3)"
                             >
-                                {copied ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
-                                {copied ? "已複製！" : "複製內容"}
+                                <ChevronLeft size={16} />
+                                <span className="hidden sm:inline">上一步</span>
                             </button>
-                        </div>
                     </div>
                 </motion.div>
             );
 
             return (
                 <div className="min-h-screen p-4 md:p-8 relative z-10 transition-colors duration-500">
-                    <div className="max-w-3xl mx-auto pb-20"> {/* pb-20 for footer spacing */}
+                    <div className="max-w-6xl mx-auto pb-20"> {/* Increased width for dual columns */}
                         
                         {/* Header */}
                         <header className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-start justify-between gap-4 relative">
@@ -1314,7 +1428,7 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                         </header>
 
                         {/* Progress Bar */}
-                        <div className="mb-8">
+                        <div className="mb-8 max-w-3xl mx-auto">
                             <div className={`flex justify-between text-xs font-bold mb-2 uppercase tracking-wider ${theme === 'cyber' ? 'orbitron text-slate-500' : 'text-slate-400'}`}>
                                 <span className={step >= 1 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>基本資料</span>
                                 <span className={step >= 2 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>內容情境</span>
@@ -1335,46 +1449,44 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                             </div>
                         </div>
 
-                        {/* Wizard Card */}
-                        <Card theme={theme} className="min-h-[500px] flex flex-col">
-                            <div className="p-6 md:p-8 flex-1">
-                                <AnimatePresence mode="wait">
-                                    {step === 1 && renderStep1()}
-                                    {step === 2 && renderStep2()}
-                                    {step === 3 && renderStep3()}
-                                    {step === 4 && renderStep4()}
-                                </AnimatePresence>
-                            </div>
-
-                            {/* Footer Controls */}
-                            <div className={`p-6 flex justify-between items-center backdrop-blur-sm border-t ${
-                                theme === 'cyber' ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-100'
-                            }`}>
-                                {/* Left Side: Previous Button */}
-                                <div className="w-1/3 flex justify-start">
-                                    {step > 1 && (
-                                        <button 
-                                            onClick={() => setStep(step - 1)}
-                                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-                                                theme === 'cyber'
-                                                ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                                                : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
-                                            }`}
-                                        >
-                                            <ChevronLeft size={20} />
-                                            上一步
-                                        </button>
-                                    )}
+                        {/* Wizard Card - Adjust width for steps */}
+                        {step < 4 && (
+                            <Card theme={theme} className="min-h-[500px] flex flex-col max-w-3xl mx-auto">
+                                <div className="p-6 md:p-8 flex-1">
+                                    <AnimatePresence mode="wait">
+                                        {step === 1 && renderStep1()}
+                                        {step === 2 && renderStep2()}
+                                        {step === 3 && renderStep3()}
+                                    </AnimatePresence>
                                 </div>
 
-                                {/* Center: Spacer */}
-                                <div className="w-1/3 flex justify-center">
-                                    {/* Empty */}
-                                </div>
+                                {/* Footer Controls */}
+                                <div className={`p-6 flex justify-between items-center backdrop-blur-sm border-t ${
+                                    theme === 'cyber' ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-100'
+                                }`}>
+                                    {/* Left Side: Previous Button */}
+                                    <div className="w-1/3 flex justify-start">
+                                        {step > 1 && (
+                                            <button 
+                                                onClick={() => setStep(step - 1)}
+                                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+                                                    theme === 'cyber'
+                                                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                                    : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
+                                                }`}
+                                            >
+                                                <ChevronLeft size={20} />
+                                                上一步
+                                            </button>
+                                        )}
+                                    </div>
 
-                                {/* Right Side: Next/Restart Button */}
-                                <div className="w-1/3 flex justify-end">
-                                    {step < 4 ? (
+                                    {/* Center: Spacer */}
+                                    <div className="w-1/3 flex justify-center">
+                                    </div>
+
+                                    {/* Right Side: Next Button */}
+                                    <div className="w-1/3 flex justify-end">
                                         <button 
                                             onClick={() => setStep(step + 1)}
                                             className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 group text-white ${
@@ -1386,25 +1498,14 @@ ${isGame && examplesList ? `* **範例題目 (Example Questions)**：\n    ${exa
                                             下一步
                                             <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                         </button>
-                                    ) : (
-                                        <button 
-                                            onClick={() => {
-                                                setStep(1);
-                                                setCopied(false);
-                                            }}
-                                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-                                                theme === 'cyber'
-                                                ? 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800'
-                                                : 'text-slate-500 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
-                                            }`}
-                                        >
-                                            <RotateCcw size={18} />
-                                            重新設計
-                                        </button>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
-                        </Card>
+                            </Card>
+                        )}
+                        
+                        {/* Step 4 Rendering (Wide Layout) */}
+                        {step === 4 && renderStep4()}
+
 
                         {/* Extra Links Above Footer */}
                         <div className="mt-12 flex flex-wrap justify-center gap-4">
