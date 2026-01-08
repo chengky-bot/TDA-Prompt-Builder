@@ -75,7 +75,7 @@
             opacity: 1;
         }
 
-        /* Scrollbar */
+        /* Scrollbar - Conditional styling via CSS variables or specific overrides */
         body.theme-cyber textarea::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
         body.theme-cyber textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; border: 1px solid #06b6d4; }
         body.theme-cyber textarea::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
@@ -203,8 +203,7 @@
             Github,
             FileJson, 
             FileText,
-            Upload,
-            AlertCircle
+            Upload 
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
@@ -278,9 +277,9 @@
             category: "教學遊戲", 
             subjectCategory: "語文", 
             subjectCustomInput: "", 
-            gameStyle: "扭蛋機 (Gachapon)", // Changed back to String for Single Select
+            gameStyle: ["扭蛋機 (Gachapon)"], 
             gameStyleCustomInput: "", 
-            interactionType: ["點擊 (Click)"], 
+            interactionType: ["3選1答案"], 
             interactionCustomInput: "", 
             learningDiversity: [], 
             includePreferenceSettings: true, // Default to true
@@ -375,8 +374,8 @@ c. 正向語言與建設性建議
                 "放天燈 / 孔明燈 (Sky Lantern)", 
                 "祈福牆 / 願望板 (Wish Wall)", 
                 "香爐 / 點香祈福 (Incense Offering)", 
-                "找詞遊戲 (Word Search Puzzle)", // Moved here
-                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)", // Moved here
+                "找詞遊戲 (Word Search Puzzle)", 
+                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)",
                 "其他"
             ];
             
@@ -389,7 +388,8 @@ c. 正向語言與建設性建議
             ];
 
             const interactionTypes = [
-                // 基礎題型 REMOVED (找詞遊戲 also removed from here and moved to gameStyle)
+                // 基礎題型 REMOVED
+                // "找詞遊戲 (Word Search Puzzle)", // Removed from here
                 
                 // 操作與排序
                 "點擊 (Click)",
@@ -593,8 +593,8 @@ c. 正向語言與建設性建議
 * **工具名稱**：${formData.toolName || "[未命名工具]"}
 * **工具範疇**：${formData.category}
 * **科目**：${subject || "未指定"}
-* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)
-    ${isGame ? `* **遊戲機制說明**：「遊戲階段」：純粹遊戲(無知識），僅作為學習間的動機調節器，所有知識傳遞僅發生於問答彈窗。「遊戲－問答交替循環」模式， 進行遊戲機制後會彈出一個問題， 無論答對或答錯，皆給予即時回饋，並返回下一個關卡，此循環持續進行，直到完成預設題數。` : ""}
+${isGame ? `* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)
+    * **遊戲機制說明**：「遊戲階段」：純粹遊戲(無知識），僅作為學習間的動機調節器，所有知識傳遞僅發生於問答彈窗。「遊戲－問答交替循環」模式， 進行遊戲機制後會彈出一個問題， 無論答對或答錯，皆給予即時回饋，並返回下一個關卡，此循環持續進行，直到完成預設題數。` : ""}
 * **互動機制**：${interaction}
 ${isGame ? `* **遊戲模式需求**：請生成 **三種遊戲模式**，每種模式需分開 **初階、中階、高階** 三種難度。` : ""}
 ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}` : ""}
@@ -667,7 +667,9 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
         - **功能一**：字體大小（6級）：小小的(14px)｜小一點(16px)｜剛剛好(18px)｜大一點(22px)｜大大的(26px)｜超～大(32px)。
         - **功能二**：說話速度（6級）：0.5｜0.6｜0.7｜0.8｜0.9｜1.0（倍速），標題：「說話速度」，輔助視覺：左側標註 🐢「慢慢說」，右側標註 🐇「快快說」。`;
 
-                let prompt = `# 6. 技術規格 (Technical Stack)
+                let prompt = `根據你的建議，全部實行。
+
+# 6. 技術規格 (Technical Stack)
 請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：
 
 1.  **Core Framework**: React (Functional Components + Hooks).
@@ -679,6 +681,9 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
     * **🔊 語音功能**: 有on/off功能, 若實作 \`speak\` 函式，請將 \`lang\` 預設值設為 \`'zh-HK'\`。
     ${formData.includePreferenceSettings ? preferenceSettingsText : ""}
     * **⬅️ 導航**: 左上方必須有一個顯眼的「返回主頁」按鈕。
+    * **💾 儲存 (Download HTML)**: 提供使用者一鍵下載當前網頁完整 HTML 原始碼的能力，便於教師備份教學頁面、開發者除錯或存檔原型設計。
+        - 位置：左下角固定於瀏覽器視窗左下角，距離左邊界與底邊界各 20px。
+        - 按鈕外觀：文字「⬇️ 下載 HTML」，字型大小 16px，背景色根據版面背景自然調節，圓角 6px。
     * **🦶 頁尾與版權 (Footer)**: 頁面最底端顯示置中文字：\`©2025 WMC\`。
     * **🏷️ 懸浮標籤 (FAB)**: 
         - 位置：右下角固定 (Fixed)。
