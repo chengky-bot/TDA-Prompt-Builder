@@ -203,7 +203,9 @@
             Github,
             FileJson, 
             FileText,
-            Upload 
+            Upload,
+            AlertCircle,
+            Code // Added Code icon
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
@@ -279,10 +281,11 @@
             subjectCustomInput: "", 
             gameStyle: ["扭蛋機 (Gachapon)"], 
             gameStyleCustomInput: "", 
-            interactionType: ["3選1答案"], 
+            interactionType: ["點擊 (Click)"], 
             interactionCustomInput: "", 
             learningDiversity: [], 
             includePreferenceSettings: true, // Default to true
+            isGemini: true, // New: Generate for Gemini
             examples: [
                 { text: "", level: "初階", count: 10, mechanism: "3選1答案" },
                 { text: "", level: "中階", count: 10, mechanism: "4選1答案" },
@@ -347,6 +350,14 @@ c. 正向語言與建設性建議
                 }));
             };
 
+             // Toggle Gemini Generation Settings
+             const toggleIsGemini = () => {
+                setFormData(prev => ({
+                    ...prev,
+                    isGemini: !prev.isGemini
+                }));
+            };
+
             const categories = [
                 { value: "教學工具", label: "📚 教學工具", icon: BookOpen },
                 { value: "教學遊戲", label: "🎮 教學遊戲", icon: Gamepad2 },
@@ -389,7 +400,6 @@ c. 正向語言與建設性建議
 
             const interactionTypes = [
                 // 基礎題型 REMOVED
-                "找詞遊戲 (Word Search Puzzle)", 
                 
                 // 操作與排序
                 "點擊 (Click)",
@@ -534,15 +544,9 @@ c. 正向語言與建設性建議
                 const isGame = formData.category === "教學遊戲";
                 
                 const subject = formData.subjectCategory === "其他" ? formData.subjectCustomInput : formData.subjectCategory;
-
-                let styles = [...formData.gameStyle];
-                if (styles.includes("其他")) {
-                    styles = styles.filter(s => s !== "其他");
-                    if (formData.gameStyleCustomInput.trim()) {
-                        styles.push(formData.gameStyleCustomInput);
-                    }
-                }
-                const style = styles.length > 0 ? styles.join("、") : "未指定";
+                
+                // Game Style is now a single string
+                const style = formData.gameStyle === "其他" ? formData.gameStyleCustomInput : formData.gameStyle;
                 
                 let interactions = [...formData.interactionType];
                 if (interactions.includes("其他")) {
@@ -564,7 +568,7 @@ c. 正向語言與建設性建議
 你是一位擁有 15 年經驗的「資深前端工程師」與「教育科技（EdTech）UX 專家」，專注於為小學生至中學生（具特殊教育需求的學習者）設計直觀、高互動性且符合無障礙標準（WCAG 2.1）的網頁學習工具。你擅長使用 HTML5、CSS3 與 Vanilla JavaScript 開發輕量、響應式、無需外部依賴的應用，並偏好運用 Emoji、CSS 動畫、正向回饋機制 與多感官提示（如顏色、聲音、點擊動效）來提升學習動機與參與度。
 
 你的任務是協助教育工作者（如教師或課程設計者）打造一個在桌機與行動裝置上皆直觀易用的線上學習平台。請以顧問式口吻，具批判性及建設性思考角度，不要盲目服從，找到設計的邏輯問題、設計盲點，請特別從以下角度進行批判性檢視：
-•「檢視『遊戲－問答交替循環』機制是否邏輯清晰
+•「檢視『遊戲－問答交替循環』機制是否邏輯清晰,如「本工具採用『情境遊戲 → 觸發問答 → 回饋 → 返回遊戲』的循環模式，問答以全屏彈窗呈現，完成後自動返回原遊戲場景。」
 •模擬工具的機制是否直觀容易明白？
 •學習工具的排板是否有誤?
 • 行動裝置上的互動模式是否符合無障礙標準？
@@ -676,7 +680,7 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
                 let prompt = `根據你的建議，
 
 # 6. 技術規格 (Technical Stack)
-請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：
+${formData.isGemini ? "請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：" : "請提供以下技術實作的建議與代碼片段："}
 
 1.  **Core Framework**: React (Functional Components + Hooks).
 2.  **Styling**: Tailwind CSS (配色需活潑、高對比、護眼).
@@ -1245,6 +1249,32 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
                                     }`} />
                                 </button>
                             </div>
+                            
+                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${
+                                        theme === 'cyber' ? 'bg-purple-900/50 text-purple-400' : 'bg-purple-100 text-purple-600'
+                                    }`}>
+                                        <Code size={20} />
+                                    </div>
+                                    <div>
+                                        <div className={`font-bold text-sm ${theme === 'cyber' ? 'text-slate-200' : 'text-slate-800'}`}>是否生成 Gemini 指令</div>
+                                        <div className={`text-xs ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>若開啟，將包含「請生成一個完整的單一 HTML 檔案...」指令</div>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={toggleIsGemini}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                                        formData.isGemini 
+                                        ? (theme === 'cyber' ? 'bg-purple-500' : 'bg-purple-600') 
+                                        : (theme === 'cyber' ? 'bg-slate-700' : 'bg-slate-300')
+                                    }`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                        formData.isGemini ? 'translate-x-6' : 'translate-x-1'
+                                    }`} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
@@ -1424,7 +1454,7 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
                                     : 'bg-slate-100 text-slate-600 border border-slate-200'
                                 }`}>
                                     <Bot size={16} />
-                                    v1.0
+                                    v1.1
                                 </div>
                                 <button 
                                     onClick={triggerFileInput}
