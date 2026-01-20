@@ -203,9 +203,7 @@
             Github,
             FileJson, 
             FileText,
-            Upload,
-            AlertCircle,
-            Code // Added Code icon
+            Upload 
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
@@ -281,7 +279,7 @@
             subjectCustomInput: "", 
             gameStyle: ["扭蛋機 (Gachapon)"], 
             gameStyleCustomInput: "", 
-            interactionType: ["點擊 (Click)"], 
+            interactionType: ["3選1答案"], 
             interactionCustomInput: "", 
             learningDiversity: [], 
             includePreferenceSettings: true, // Default to true
@@ -679,8 +677,8 @@ ${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}
 
                 let prompt = `根據你的建議，
 
-# 6. 技術規格 (Technical Stack)
-${formData.isGemini ? "請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：" : "請提供以下技術實作的建議與代碼片段："}
+# 6. 技術規格 (Technical Stack):
+${formData.isGemini ? "請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：" : ""}
 
 1.  **Core Framework**: React (Functional Components + Hooks).
 2.  **Styling**: Tailwind CSS (配色需活潑、高對比、護眼).
