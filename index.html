@@ -203,9 +203,7 @@
             Github,
             FileJson, 
             FileText,
-            Upload,
-            AlertCircle,
-            Code // Added Code icon here
+            Upload 
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
@@ -281,7 +279,7 @@
             subjectCustomInput: "", 
             gameStyle: ["扭蛋機 (Gachapon)"], 
             gameStyleCustomInput: "", 
-            interactionType: ["點擊 (Click)"], 
+            interactionType: ["3選1答案"], 
             interactionCustomInput: "", 
             learningDiversity: [], 
             includePreferenceSettings: true, // Default to true
@@ -296,7 +294,16 @@
             purpose: "",
             context: "",
             value: ["堅毅"], 
-            rules: [`在右上角加上學習儀表版功能,讓學生能夠自我檢測, 成績要能存在本機`, "答對時給予 提示音及對應的知識理論，為何該答案是正確", "首頁輸入框提示：請輸入你的名字開始遊戲： 例如：小明, 行動按鈕：開始遊戲",
+            rules: [`計分規則：努力獎勵型計分規則：
+每答對 1 題得 10 分（肯定學習成果），
+每答錯 1 次額外加 1 分（肯定勇於嘗試）。
+總分＝答對得分＋錯誤次數，
+讓「堅持到底」的努力也被看見！
+舉例：2 題全對，但共錯 6 次 → 得分＝20＋6＝26 分。學生的報告看到：
+🎉 恭喜你全部答對！
+能力得分：20 分
+努力嘗試：6 次
+總成就分：26 分`, "答對時給予 提示音及對應的知識理論，為何該答案是正確", "首頁輸入框提示：請輸入你的名字開始遊戲： 例如：小明, 行動按鈕：開始遊戲",
 "增加一個 自學模式，用戶能自行設定問題給自己, 例子(x - y) 然後自行解答。",
 `「個別化學習報告頁面」，需符合以下原則：
 a. 個別化與數據化
@@ -1289,12 +1296,11 @@ ${formData.isGemini ? "請生成一個完整的**單一 HTML 檔案** ，並包�
                             <h3 className={`text-lg font-bold ${
                                 theme === 'cyber' ? 'text-cyan-100 orbitron tracking-wide' : 'text-slate-800'
                             }`}>提詞已生成！</h3>
-                            <div className={`text-sm mt-2 space-y-1 ${
-                                theme === 'cyber' ? 'text-cyan-200/80' : 'text-slate-600'
+                            <p className={`text-sm mt-1 ${
+                                theme === 'cyber' ? 'text-cyan-200/70' : 'text-slate-500'
                             }`}>
-                                <p>1. 請點擊下方按鈕複製 PART 1 設計與邏輯，然後貼給 AI 進行構思。</p>
-                                <p>2. 待 AI 回應後，請複製 PART 2 技術與執行讓 AI 生成 MVP 專案（最小可行產品）。</p>
-                            </div>
+                                請點擊下方按鈕複製，然後貼給 AI。
+                            </p>
                         </div>
                     </div>
 
