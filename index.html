@@ -115,7 +115,7 @@
             BookOpen, Gamepad2, HeartHandshake, MessageCircle, FlaskConical, 
             ChevronRight, ChevronLeft, Copy, CheckCircle, Wand2, Settings2, 
             Sparkles, Save, RotateCcw, Plus, Trash2, Sun, Moon, FileText, 
-            Upload, Download, Code, Monitor, Cpu
+            Upload, Download, Code, Monitor, Cpu, BrainCircuit, ListPlus
         } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0,react-dom@18.2.0';
 
         // --- Data & Options ---
@@ -134,6 +134,13 @@
             "小學四年級 (P4)", "小學五年級 (P5)", "小學六年級 (P6)", 
             "中學一年級 (S1)", "中學二年級 (S2)", "中學三年級 (S3)", 
             "中學四年級 (S4)", "中學五年級 (S5)", "中學六年級 (S6)"
+        ];
+
+        const SEN_OPTIONS = [
+            "一般 (General)", 
+            "輕度需要 (Mild Needs)", 
+            "中度需要 (Moderate Needs)",
+            "高度需要 (Severe Needs)"
         ];
 
         const GAME_STYLES = [
@@ -158,6 +165,23 @@
         ];
 
         const VALUES = ["堅毅", "尊重他人", "責任感", "國民身份認同", "承擔精神", "誠信", "仁愛", "守法", "同理心", "勤勞"];
+
+        // New Constants for Question Examples
+        const QUESTION_TYPES = [
+            "3選1 (3-Choice)", 
+            "4選1 (4-Choice)", 
+            "供詞填充 (Fill-in-Blanks)", 
+            "文字輸入 (Text Input)", 
+            "是非題 (True/False)",
+            "其他 (Other)"
+        ];
+
+        const DIFFICULTY_LEVELS = [
+            "基礎 (Basic)", 
+            "進階 (Advanced)", 
+            "挑戰 (Challenge)",
+            "其他 (Other)"
+        ];
 
         // --- Components ---
         const Card = ({ children, className = "", theme }) => (
@@ -214,10 +238,10 @@
                 includePreferenceSettings: true,
                 isGemini: true,
                 examples: [
-                    { text: "1+1=?", level: "初階", count: 10, mechanism: "3選1答案" }
+                    { text: "1+1=?", level: "基礎 (Basic)", count: 10, mechanism: "3選1 (3-Choice)" }
                 ],
                 grade: "小學二年級 (P2)",
-                senLevel: "輕度 (Mild)",
+                senLevel: "輕度需要 (Mild Needs)",
                 purpose: "",
                 context: "",
                 value: ["堅毅"],
@@ -255,6 +279,23 @@
             };
             const removeRule = (idx) => updateField('rules', formData.rules.filter((_, i) => i !== idx));
 
+            // Example Management
+            const addExample = () => {
+                const newExamples = [...formData.examples, { text: "", level: "基礎 (Basic)", count: 5, mechanism: "3選1 (3-Choice)" }];
+                updateField('examples', newExamples);
+            };
+            
+            const updateExample = (index, field, value) => {
+                const newExamples = [...formData.examples];
+                newExamples[index] = { ...newExamples[index], [field]: value };
+                updateField('examples', newExamples);
+            };
+
+            const removeExample = (index) => {
+                const newExamples = formData.examples.filter((_, i) => i !== index);
+                updateField('examples', newExamples);
+            };
+
             // Logic Generators
             const generateDesignPrompt = useCallback(() => {
                 const rulesList = formData.rules.filter(r => r.trim()).map((r, i) => `${i + 1}. ${r}`).join("\n    ");
@@ -266,17 +307,55 @@
                 const style = formData.gameStyle === "其他" ? formData.gameStyleCustom : formData.gameStyle;
                 const subject = formData.subjectCategory === "其他" ? formData.subjectCustom : formData.subjectCategory;
                 
+                // Format Examples
+                const examplesString = formData.examples.map((ex, i) => 
+                    `* **範例 ${i+1}**：${ex.text || "(未輸入)"}\n      - 題型：${ex.mechanism}\n      - 數量：${ex.count}題\n      - 程度：${ex.level}`
+                ).join("\n    ");
+
                 let prompt = `# 1. 角色設定 (Role)
-你是一位擁有 15 年經驗的「資深前端工程師」與「教育科技 UX 專家」，專注於為${formData.grade}設計直觀、高互動性的網頁學習工具。
+你是一位擁有 15 年經驗的「資深前端工程師」與「教育科技（EdTech）UX 專家」，專注於為小學生至中學生（具特殊教育需求的學習者）設計直觀、高互動性且符合無障礙標準（WCAG 2.1）的網頁學習工具。你擅長使用 HTML5、CSS3 與 Vanilla JavaScript 開發輕量、響應式、無需外部依賴的應用，並偏好運用 Emoji、CSS 動畫、正向回饋機制 與多感官提示（如顏色、聲音、點擊動效）來提升學習動機與參與度。
+
+你的任務是協助教育工作者（如教師或課程設計者）打造一個在桌機與行動裝置上皆直觀易用的線上學習平台。請以顧問式口吻，具批判性及建設性思考角度，不要盲目服從，找到設計的邏輯問題、設計盲點，請特別從以下角度進行批判性檢視：
+•「檢視『遊戲－問答交替循環』機制是否邏輯清晰
+•模擬工具的機制是否直觀容易明白？
+•學習工具的排板是否有誤?
+• 行動裝置上的互動模式是否符合無障礙標準？
+
+分以下四部分回應：
+一.  核心設計原則：說明 3–4 項針對下文
+# 2. 專案參數配置 (Configuration)
+# 3. 設計與教育原則 (Design & Pedagogical Principles)
+# 4. 智能教學邏輯 (AI Scaffolding Logic)
+# 5. 遊戲化結算系統 (Game Over & Report)
+的關鍵 UX/UI 原則
+
+二.  畫面結構建議：針對
+# 2. 專案參數配置 (Configuration)
+# 3. 設計與教育原則 (Design & Pedagogical Principles)
+# 4. 智能教學邏輯 (AI Scaffolding Logic)
+# 5. 遊戲化結算系統 (Game Over & Report)
+，描述其響應式佈局、導航邏輯與視覺層級，並強調如何透過留白、大按鈕、柔和配色與字體選擇提升可讀性與舒適度。
+
+三.  互動活動範例：
+根據# 2. 專案參數配置 (Configuration)
+提供 1–2 個具體、可立即實作的互動活動設計（例如「拖放分類」或「點擊消除答題」），無障礙考量（如鍵盤導航支援）、以及如何呈現正向回饋（如答錯不懲罰、多次嘗試加分等成長型思維機制）。
+
+四、提供「高保真文字版介面藍圖」：
+以結構化文字（搭配 Emoji、縮排、區塊標示）模擬關鍵畫面（如遊戲主畫面、結算報告頁）的佈局、元件位置與互動狀態，並標註設計意圖（如「此處使用大按鈕確保觸控準確性」）。
+
+****「以下為專案配置，請據此分析」
 
 # 2. 專案參數配置 (Configuration)
 * **工具名稱**：${formData.toolName || "[未命名]"}
 * **工具範疇**：${formData.category}
 * **科目**：${subject}
 * **核心用途**：${formData.purpose}
-* **目標學生**：${formData.grade} (SEN支援: ${formData.senLevel})
+* **目標學生**：${formData.grade}
+* **學生智能需求 (SEN Level)**：${formData.senLevel}
 * **互動機制**：${formData.interactions.join("、")} ${formData.interactionCustom ? `、${formData.interactionCustom}` : ""}
 ${formData.category === "教學遊戲" ? `* **遊戲風格**：${style} (以此風格為視覺隱喻)\n* **遊戲機制**：遊戲與問答交替循環。` : ""}
+* **題目範例與設定 (Question Examples)**：
+    ${examplesString || "無題目範例"}
 * **照顧學習差異**：
     ${diversityList || "無特殊設定"}
 * **融入價值觀**：${formData.value.join("、")}
@@ -303,19 +382,30 @@ ${formData.category === "教學遊戲" ? `
 
             const generateTechPrompt = useCallback(() => {
                 return `# 6. 技術規格 (Technical Stack)
-請生成一個完整的 **單一 HTML 檔案**，包含：
-1. **框架**：React (Hooks) + Tailwind CSS (CDN)。
-2. **圖示**：Lucide-React。
-3. **動畫**：Framer Motion (流暢轉場)。
-4. **功能要求**：
-    * 🔊 語音功能 (zh-HK)。
-    * 💾 儲存/下載 HTML 功能。
-    * 🛠️ ${formData.includePreferenceSettings ? "偏好設定模組 (字體大小、語速調整)" : "基本設定"}。
-    * 📱 響應式設計 (Mobile/Desktop)。
-    * 🎨 配色：${theme === 'cyber' ? "深色科技風" : "明亮活潑風"}。
+請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：
 
-請編寫完整的程式碼，確保所有邏輯（包括遊戲循環、計分、回饋）都能在單一檔案中直接運行。`;
-            }, [formData, theme]);
+1. **Core Framework**: React (Functional Components + Hooks).
+2. **Styling**: Tailwind CSS (配色需活潑、高對比、護眼).
+3. **Icons**: Lucide-React.
+4. **Animation**: Framer Motion (所有點擊、切換、得分、進場都必須有流暢動畫).
+5. **UI Library**: 使用 shadcn/ui 風格的組件設計.
+6. **必備功能**:
+    * **🔊 語音功能**: 有on/off功能, 若實作 \`speak\` 函式，請將 \`lang\` 預設值設為 \`'zh-HK'\`。
+    * **🛠️ 偏好設定模組 (Preference Settings)**:
+       網頁右上角有一個隱藏式偏好設定模組，藍色正方形背景 + 白色三條水平滑桿圖示，點擊按鈕後，從右側或下方滑入/淡入彈出選單。
+       - **功能一**：字體大小（6級）：1(14px)｜2(16px)｜3(18px)｜4(22px)｜5(26px)｜6(32px)。
+       - **功能二**：說話速度（6級）：0.5｜0.6｜0.7｜0.8｜0.9｜1.0（倍速），標題：「說話速度」，輔助視覺：左側標註🐢「慢慢說」，右側標註🐇「快快說」。
+    * **⬅️ 導航**: 左上方必須有一個顯眼的「返回主頁」按鈕。
+    * **💾 儲存 (Download HTML)**:於主頁左下角設置提供「⬇️ 下載 HTML」按鈕，供使用者一鍵下載當前網頁完整 HTML 原始碼的能力，便於教師備份教學頁面。
+    * **🦶 頁尾與版權 (Footer)**: 頁面最底端顯示置中文字：\`©2025 WMC\`。
+    * **🏷️ 懸浮標籤 (FAB)**: 
+       - 位置：右下角固定 (Fixed)。
+       - 樣式：使用彩虹般的全息色（holographic/iridescent），隨視角或時間微變，外框與文字，半透明材質，營造未來感。帶有電腦型圖示。
+       - 內容：「WMC ${formData.teacherName || '(老師名字)'} 設計」。
+
+# 執行任務 (Execution)
+請根據上述配置，編寫完整的程式碼。程式碼需包含完整的 UI 佈局、邏輯處理、以及上述的三階 AI 回應內容模擬。`;
+            }, [formData]);
 
             const generateFullPrompt = () => {
                 return generateDesignPrompt() + "\n\n" + generateTechPrompt();
@@ -413,7 +503,7 @@ ${formData.category === "教學遊戲" ? `
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         <div>
                                             <Label theme={theme}>適用年級</Label>
                                             <Select theme={theme} options={GRADES} value={formData.grade} onChange={e => updateField('grade', e.target.value)} />
@@ -425,6 +515,82 @@ ${formData.category === "教學遊戲" ? `
                                                 <Input theme={theme} className="mt-2" placeholder="請輸入科目..." value={formData.subjectCustom} onChange={e => updateField('subjectCustom', e.target.value)} />
                                             )}
                                         </div>
+                                        <div>
+                                            <Label theme={theme}>學生智能需求 (SEN)</Label>
+                                            <Select theme={theme} options={SEN_OPTIONS} value={formData.senLevel} onChange={e => updateField('senLevel', e.target.value)} />
+                                        </div>
+                                    </div>
+
+                                    {/* Question Examples Section */}
+                                    <div className={`mt-8 pt-6 border-t ${theme === 'cyber' ? 'border-slate-800' : 'border-slate-200'}`}>
+                                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                            <ListPlus className={theme === 'cyber' ? 'text-purple-400' : 'text-purple-600'} size={20}/>
+                                            題目範例設定 (Question Examples)
+                                        </h3>
+                                        
+                                        <div className="space-y-4">
+                                            {formData.examples.map((ex, idx) => (
+                                                <div key={idx} className={`p-4 rounded-xl border relative transition-all ${theme === 'cyber' ? 'bg-slate-900/50 border-slate-700 hover:border-slate-500' : 'bg-slate-50 border-slate-300 hover:border-blue-400'}`}>
+                                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                                                        <div className="md:col-span-6">
+                                                            <label className="text-xs font-bold opacity-70 mb-1 block">問題例子 (Example Question)</label>
+                                                            <Input 
+                                                                theme={theme} 
+                                                                placeholder="例如：請計算 5 + 3 = ?" 
+                                                                value={ex.text} 
+                                                                onChange={(e) => updateExample(idx, 'text', e.target.value)}
+                                                                className="!py-2 !text-sm"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-3">
+                                                            <label className="text-xs font-bold opacity-70 mb-1 block">題型 (Type)</label>
+                                                            <Select 
+                                                                theme={theme} 
+                                                                options={QUESTION_TYPES} 
+                                                                value={ex.mechanism} 
+                                                                onChange={(e) => updateExample(idx, 'mechanism', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="text-xs font-bold opacity-70 mb-1 block">程度 (Level)</label>
+                                                            <Select 
+                                                                theme={theme} 
+                                                                options={DIFFICULTY_LEVELS} 
+                                                                value={ex.level} 
+                                                                onChange={(e) => updateExample(idx, 'level', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-1">
+                                                            <label className="text-xs font-bold opacity-70 mb-1 block">數量 (Qty)</label>
+                                                            <Input 
+                                                                type="number" 
+                                                                theme={theme} 
+                                                                value={ex.count} 
+                                                                onChange={(e) => updateExample(idx, 'count', e.target.value)}
+                                                                className="!py-2 !text-sm text-center"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {formData.examples.length > 1 && (
+                                                        <button 
+                                                            onClick={() => removeExample(idx)}
+                                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
+                                                            title="移除此範例"
+                                                        >
+                                                            <Trash2 size={14}/>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <button 
+                                            onClick={addExample}
+                                            className={`mt-4 w-full py-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all font-bold ${theme === 'cyber' ? 'border-slate-700 text-slate-400 hover:border-purple-500 hover:text-purple-400 hover:bg-purple-500/10' : 'border-slate-300 text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'}`}
+                                        >
+                                            <Plus size={18}/> 新增更多題目範例
+                                        </button>
                                     </div>
                                 </Card>
                             )}
