@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WMC TDA 教學設計輔助工具提詞器</title>
+    <title>WMC TDA 教學設計輔助工具提詞器 (Teaching Design Aids Prompt Builder)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Babel for JSX (Pinned version to fix .targets["esmodules"] error) -->
-    <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- DOCX Library -->
+    <!-- DOCX Library for Word Export -->
     <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
 
     <!-- Google Fonts -->
@@ -30,39 +30,102 @@
             color: #e2e8f0; /* Slate 200 */
         }
 
+        /* Cyber Grid Background */
         .cyber-grid {
-            position: fixed; top: 0; left: 0; width: 200vw; height: 200vh;
-            background-image: linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200vw;
+            height: 200vh;
+            background-image: 
+                linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
             background-size: 40px 40px;
             transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
             animation: grid-move 20s linear infinite;
-            z-index: -1; pointer-events: none; opacity: 0; transition: opacity 0.5s ease;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
         
-        body.theme-cyber .cyber-grid { opacity: 1; }
+        body.theme-cyber .cyber-grid {
+            opacity: 1;
+        }
 
         @keyframes grid-move {
             0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
             100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); }
         }
 
+        /* Vignette Effect */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 50%, #020617 100%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        body.theme-cyber .vignette {
+            opacity: 1;
+        }
+
+        /* Scrollbar - Conditional styling via CSS variables or specific overrides */
+        body.theme-cyber textarea::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+        body.theme-cyber textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; border: 1px solid #06b6d4; }
+        body.theme-cyber textarea::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+
+        body.theme-plain textarea::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        body.theme-plain textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        body.theme-plain textarea::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        textarea::-webkit-scrollbar { width: 8px; }
+
+        /* Holographic Gradient Animation */
+        @keyframes gradient-xy {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-holo {
+            background-size: 200% 200%;
+            animation: gradient-xy 3s ease infinite;
+        }
+
+        /* Text Glows - Only in Cyber Mode */
+        body.theme-cyber .text-glow-cyan {
+            text-shadow: 0 0 5px rgba(6, 182, 212, 0.5), 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+        body.theme-cyber .text-glow-purple {
+            text-shadow: 0 0 5px rgba(168, 85, 247, 0.5), 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+
+        /* Tech Borders - Cyber Mode */
         .tech-border {
+            position: relative;
             background: rgba(15, 23, 42, 0.6); 
             border: 1px solid rgba(6, 182, 212, 0.3); 
             box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
             backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
-
+        
+        /* Tech Input - Cyber Mode */
         .tech-input {
             background: rgba(30, 41, 59, 0.5); 
             border: 1px solid #334155;
             color: #ecfeff;
+            transition: all 0.3s ease;
         }
         .tech-input:focus {
             border-color: #06b6d4;
             box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
-            outline: none;
+            background: rgba(30, 41, 59, 0.8);
         }
 
         /* --- Plain Theme Styles --- */
@@ -74,141 +137,132 @@
         .plain-border {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
         }
 
         .plain-input {
             background: #ffffff;
             border: 1px solid #cbd5e1;
             color: #334155;
+            transition: all 0.3s ease;
         }
         .plain-input:focus {
-            border-color: #3b82f6;
+            border-color: #3b82f6; /* Blue 500 */
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
             outline: none;
         }
 
-        .orbitron { font-family: 'Orbitron', sans-serif; }
-        .mono { font-family: 'Share Tech Mono', monospace; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        body.theme-cyber ::-webkit-scrollbar-track { background: #0f172a; }
-        body.theme-cyber ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; border: 1px solid #06b6d4; }
-        body.theme-plain ::-webkit-scrollbar-track { background: #f1f5f9; }
-        body.theme-plain ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .mono {
+            font-family: 'Share Tech Mono', monospace;
+        }
     </style>
 </head>
-<body class="theme-cyber transition-colors duration-500">
+<body class="selection:bg-cyan-500 selection:text-white transition-colors duration-500">
+    <!-- Background Elements (Only visible in Cyber theme) -->
     <div class="cyber-grid"></div>
+    <div class="vignette"></div>
+    
     <div id="root"></div>
 
+    <!-- React Application Script -->
     <script type="text/babel" data-type="module">
-        // Import React first to establish the version
-        import React, { useState, useEffect, useCallback } from 'https://esm.sh/react@18.2.0';
+        // FIX: Explicitly defined dependencies to ensure a singleton React instance
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
         import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
-        
-        // FIX: Force Framer Motion and Lucide to use the EXACT same React version using ?deps=
-        // This prevents "Multiple React Instances" error (Cannot read properties of null reading 'useContext')
         import { motion, AnimatePresence } from 'https://esm.sh/framer-motion@10.16.4?deps=react@18.2.0,react-dom@18.2.0';
         import { 
-            BookOpen, Gamepad2, HeartHandshake, MessageCircle, FlaskConical, 
-            ChevronRight, ChevronLeft, Copy, CheckCircle, Wand2, Settings2, 
-            Sparkles, Save, RotateCcw, Plus, Trash2, Sun, Moon, FileText, 
-            Upload, Download, Code, Monitor, Cpu, BrainCircuit, ListPlus
-        } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0,react-dom@18.2.0';
-
-        // --- Data & Options ---
-        const CATEGORIES = [
-            { value: "教學工具", label: "📚 教學工具", icon: BookOpen },
-            { value: "教學遊戲", label: "🎮 教學遊戲", icon: Gamepad2 },
-            { value: "情緒支援", label: "❤️ 情緒支援", icon: HeartHandshake },
-            { value: "溝通輔助", label: "🗣️ 溝通輔助", icon: MessageCircle },
-            { value: "實驗模擬", label: "🧪 實驗模擬", icon: FlaskConical },
-        ];
-
-        const SUBJECTS = ["語文", "數學", "英文", "人文", "科學", "生活技能", "電腦", "班主任課", "其他"];
-        
-        const GRADES = [
-            "小學一年級 (P1)", "小學二年級 (P2)", "小學三年級 (P3)", 
-            "小學四年級 (P4)", "小學五年級 (P5)", "小學六年級 (P6)", 
-            "中學一年級 (S1)", "中學二年級 (S2)", "中學三年級 (S3)", 
-            "中學四年級 (S4)", "中學五年級 (S5)", "中學六年級 (S6)"
-        ];
-
-        const SEN_OPTIONS = [
-            "一般 (General)", 
-            "輕度需要 (Mild Needs)", 
-            "中度需要 (Moderate Needs)",
-            "高度需要 (Severe Needs)"
-        ];
-
-        const GAME_STYLES = [
-            "扭蛋機 (Gachapon)", "夾公仔機 (Claw Crane)", "Candy Crush (消除類)",
-            "老虎機 (Slot Machine)", "轉盤抽獎 (Spin Wheel)", "大富翁 (Board Game)",
-            "打地鼠 (Whack-a-Mole)", "接水果 (Catching Fruit)", "RPG 角色扮演", "其他"
-        ];
-
-        const INTERACTION_TYPES = [
-            "點擊 (Click)", "拖拉物件 (Drag & Drop)", "連線題 (Connect)", 
-            "畫布繪圖 (Canvas)", "翻卡記憶 (Memory)", "填色 (Coloring)",
-            "滑桿控制 (Slider)", "語音互動 (Voice)", "其他"
-        ];
-
-        const DIVERSITY_OPTIONS = [
-            { label: "簡化內容 (Simplify Content)", desc: "簡單詞彙、短句，一次一概念。" },
-            { label: "多感官輸入 (Multi-sensory)", desc: "結合圖片、聲音、動作。" },
-            { label: "即時回饋 (Instant Feedback)", desc: "每步給予肯定與動畫。" },
-            { label: "語音朗讀題目 (TTS Question)", desc: "廣東話題目朗讀。" },
-            { label: "語音朗讀答案 (TTS Answer)", desc: "廣東話答案朗讀。" },
-            { label: "視覺提示 (Visual Cues)", desc: "箭頭、高亮、閃爍提示。" }
-        ];
-
-        const VALUES = ["堅毅", "尊重他人", "責任感", "國民身份認同", "承擔精神", "誠信", "仁愛", "守法", "同理心", "勤勞"];
-
-        // New Constants for Question Examples
-        const QUESTION_TYPES = [
-            "3選1 (3-Choice)", 
-            "4選1 (4-Choice)", 
-            "供詞填充 (Fill-in-Blanks)", 
-            "文字輸入 (Text Input)", 
-            "是非題 (True/False)",
-            "其他 (Other)"
-        ];
-
-        const DIFFICULTY_LEVELS = [
-            "基礎 (Basic)", 
-            "進階 (Advanced)", 
-            "挑戰 (Challenge)",
-            "其他 (Other)"
-        ];
+            BookOpen, 
+            Gamepad2, 
+            HeartHandshake, 
+            MessageCircle, 
+            FlaskConical, 
+            ChevronRight, 
+            ChevronLeft, 
+            Copy, 
+            CheckCircle, 
+            Wand2, 
+            Settings2, 
+            UserCircle, 
+            Sparkles, 
+            Save, 
+            RotateCcw,
+            Plus,
+            Trash2,
+            Monitor,
+            Bot,
+            Cpu, 
+            Zap,  
+            Accessibility,
+            ExternalLink,
+            Sun,
+            Moon,
+            Github,
+            FileJson, 
+            FileText,
+            Upload,
+            AlertCircle,
+            Code // Added Code icon here
+        } from 'https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0';
 
         // --- Components ---
+
         const Card = ({ children, className = "", theme }) => (
-            <div className={`rounded-2xl overflow-hidden p-6 ${theme === 'cyber' ? 'tech-border' : 'plain-border'} ${className}`}>
+            <div className={`rounded-2xl overflow-hidden ${theme === 'cyber' ? 'tech-border' : 'plain-border'} ${className}`}>
                 {children}
             </div>
         );
 
         const Label = ({ children, theme }) => (
-            <label className={`block text-sm font-bold mb-2 flex items-center gap-2 ${theme === 'cyber' ? 'text-cyan-300 tracking-wide uppercase orbitron' : 'text-slate-700'}`}>
+            <label className={`block text-sm font-bold mb-2 flex items-center gap-2 ${
+                theme === 'cyber' 
+                ? 'text-cyan-300 tracking-wide uppercase orbitron' 
+                : 'text-slate-700 tracking-normal'
+            }`}>
                 <span className={`w-1 h-4 rounded-sm inline-block ${theme === 'cyber' ? 'bg-cyan-500' : 'bg-blue-600'}`}></span>
                 {children}
             </label>
         );
 
-        const Input = ({ theme, className, ...rest }) => (
-            <input className={`w-full px-4 py-3 rounded-xl outline-none ${theme === 'cyber' ? 'tech-input' : 'plain-input'} ${className || ""}`} {...rest} />
-        );
+        const Input = (props) => {
+            const { theme, className, ...rest } = props;
+            return (
+                <input 
+                    className={`w-full px-4 py-3 rounded-xl outline-none ${theme === 'cyber' ? 'tech-input' : 'plain-input'} ${className || ""}`}
+                    {...rest} 
+                />
+            );
+        };
 
-        const TextArea = ({ theme, className, ...rest }) => (
-            <textarea className={`w-full px-4 py-3 rounded-xl outline-none min-h-[120px] ${theme === 'cyber' ? 'tech-input' : 'plain-input'} ${className || ""}`} {...rest} />
-        );
+        const TextArea = (props) => {
+            const { theme, className, ...rest } = props;
+            return (
+                <textarea 
+                    className={`w-full px-4 py-3 rounded-xl outline-none min-h-[120px] ${theme === 'cyber' ? 'tech-input' : 'plain-input'} ${className || ""}`}
+                    {...rest} 
+                />
+            );
+        };
 
-        const Select = ({ options, value, onChange, theme }) => (
-            <div className="relative">
-                <select value={value} onChange={onChange} className={`w-full px-4 py-3 rounded-xl outline-none appearance-none cursor-pointer ${theme === 'cyber' ? 'tech-input' : 'plain-input'}`}>
-                    {options.map(opt => <option key={opt} value={opt} className="text-black">{opt}</option>)}
+        const Select = ({ options, value, onChange, className = "", theme }) => (
+            <div className={`relative ${className}`}>
+                <select 
+                    value={value}
+                    onChange={onChange}
+                    className={`w-full px-4 py-3 rounded-xl outline-none appearance-none cursor-pointer ${theme === 'cyber' ? 'tech-input' : 'plain-input'}`}
+                >
+                    {options.map(opt => (
+                        <option 
+                            key={opt.value} 
+                            value={opt.value} 
+                            className={theme === 'cyber' ? "bg-slate-900 text-slate-200" : "bg-white text-slate-800"}
+                        >
+                            {opt.label}
+                        </option>
+                    ))}
                 </select>
                 <div className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${theme === 'cyber' ? 'text-cyan-500' : 'text-slate-400'}`}>
                     <ChevronRight size={16} className="rotate-90" />
@@ -217,106 +271,295 @@
         );
 
         // --- Main Application ---
+
+        // Function to return fresh initial state
+        const getInitialFormData = () => ({
+            teacherName: "",
+            toolName: "",
+            category: "教學遊戲", 
+            subjectCategory: "語文", 
+            subjectCustomInput: "", 
+            gameStyle: ["扭蛋機 (Gachapon)"], 
+            gameStyleCustomInput: "", 
+            interactionType: ["點擊 (Click)"], 
+            interactionCustomInput: "", 
+            learningDiversity: [], 
+            includePreferenceSettings: true, // Default to true
+            isGemini: true, // New: Generate for Gemini
+            examples: [
+                { text: "", level: "初階", count: 10, mechanism: "3選1答案" },
+                { text: "", level: "中階", count: 10, mechanism: "4選1答案" },
+                { text: "", level: "高階", count: 10, mechanism: "輸入文字 (Text Input)" } 
+            ],
+            grade: "小學二年級 (P2)",
+            senLevel: "輕度 (Mild)",
+            purpose: "",
+            context: "",
+            value: ["堅毅"], 
+            rules: [`在右上角加上學習儀表版功能,讓學生能夠自我檢測, 成績要能存在本機`, "答對時給予 提示音及對應的知識理論，為何該答案是正確", "首頁輸入框提示：請輸入你的名字開始遊戲： 例如：小明, 行動按鈕：開始遊戲",
+"增加一個 自學模式，用戶能自行設定問題給自己, 例子(x - y) 然後自行解答。",
+`「個別化學習報告頁面」，需符合以下原則：
+a. 個別化與數據化
+顯示具體學習數據，例如：答對題數／總題數、平均嘗試次數、完成時間（若適用）
+標示「最熟練項目」與「需加強項目」（例如：最易／最難的數字、詞彙或題型）
+數據需基於學生實際互動行為（如錯誤模式、重試次數）而非僅二元對錯
+b. 可視化與兒童友善設計
+使用簡易長條圖、圓餅圖或進度條呈現關鍵數據，避免複雜座標軸
+採用柔和配色、大字體、Emoji 或插畫風格圖示（如🌟、💡、🚀）
+避免文字密集，多用圖示與留白，確保低年級學生能一眼理解
+c. 正向語言與建設性建議
+以成長型思維（growth mindset）措辭：強調「努力」「進步」「小專家」「再試一次就更厲害」
+提供 1–2 條具體、可操作的建議（例如：「你可以每天練習 3 次『7 的分解』，就像搭積木一樣！」）
+避免負面標籤（如「你不會」「錯誤太多」）`,
+"🎉 慶祝特效: 任務完成時觸發 canvas-confetti（特效只會觸發一次，重置後才會再次觸發）。"
+            ]
+        });
+
         function App() {
             const [step, setStep] = useState(1);
+            const [copiedDesign, setCopiedDesign] = useState(false);
+            const [copiedTech, setCopiedTech] = useState(false);
             const [theme, setTheme] = useState('cyber');
-            // Changed copied state to string to track which section is copied
-            const [copiedSection, setCopiedSection] = useState(null);
-            
-            // Initial State
-            const [formData, setFormData] = useState({
-                teacherName: "",
-                toolName: "",
-                category: "教學遊戲",
-                subjectCategory: "語文",
-                subjectCustom: "",
-                gameStyle: "扭蛋機 (Gachapon)",
-                gameStyleCustom: "",
-                interactions: ["點擊 (Click)"],
-                interactionCustom: "",
-                learningDiversity: [],
-                includePreferenceSettings: true,
-                isGemini: true,
-                examples: [
-                    { text: "1+1=?", level: "基礎 (Basic)", count: 10, mechanism: "3選1 (3-Choice)" }
-                ],
-                grade: "小學二年級 (P2)",
-                senLevel: "輕度需要 (Mild Needs)",
-                purpose: "",
-                context: "",
-                value: ["堅毅"],
-                rules: [
-                    "在右上角加上學習儀表版功能", 
-                    "答對時給予提示音及解釋", 
-                    "首頁輸入框：請輸入名字"
-                ]
-            });
+            const fileInputRef = useRef(null); // Ref for file input
 
             useEffect(() => {
                 document.body.className = `theme-${theme}`;
             }, [theme]);
-
-            const updateField = (field, value) => {
-                setFormData(prev => ({ ...prev, [field]: value }));
-            };
-
-            const toggleSelection = (field, item) => {
-                setFormData(prev => {
-                    const current = prev[field];
-                    return {
-                        ...prev,
-                        [field]: current.includes(item) ? current.filter(i => i !== item) : [...current, item]
-                    };
-                });
-            };
-
-            // Rule Management
-            const addRule = () => updateField('rules', [...formData.rules, ""]);
-            const updateRule = (idx, val) => {
-                const newRules = [...formData.rules];
-                newRules[idx] = val;
-                updateField('rules', newRules);
-            };
-            const removeRule = (idx) => updateField('rules', formData.rules.filter((_, i) => i !== idx));
-
-            // Example Management
-            const addExample = () => {
-                const newExamples = [...formData.examples, { text: "", level: "基礎 (Basic)", count: 5, mechanism: "3選1 (3-Choice)" }];
-                updateField('examples', newExamples);
-            };
             
-            const updateExample = (index, field, value) => {
+            // Initialize state using the generator function
+            const [formData, setFormData] = useState(getInitialFormData());
+
+            const toggleTheme = () => {
+                setTheme(prev => prev === 'cyber' ? 'plain' : 'cyber');
+            };
+
+            // Toggle Preference Settings
+            const togglePreferenceSettings = () => {
+                setFormData(prev => ({
+                    ...prev,
+                    includePreferenceSettings: !prev.includePreferenceSettings
+                }));
+            };
+
+             // Toggle Gemini Generation Settings
+             const toggleIsGemini = () => {
+                setFormData(prev => ({
+                    ...prev,
+                    isGemini: !prev.isGemini
+                }));
+            };
+
+            const categories = [
+                { value: "教學工具", label: "📚 教學工具", icon: BookOpen },
+                { value: "教學遊戲", label: "🎮 教學遊戲", icon: Gamepad2 },
+                { value: "情緒支援", label: "❤️ 情緒支援", icon: HeartHandshake },
+                { value: "溝通輔助", label: "🗣️ 溝通輔助", icon: MessageCircle },
+                { value: "實驗模擬", label: "🧪 實驗模擬", icon: FlaskConical },
+            ];
+
+            const subjects = ["語文", "數學", "英文", "人文", "科學", "生活技能", "電腦", "班主任課", "其他"];
+
+            const gameStyles = [
+                "扭蛋機 (Gachapon)", 
+                "夾公仔機 (Claw Crane)", 
+                "Candy Crush (消除類 / Match-3)",
+                "老虎機 (Slot Machine)", 
+                "轉盤抽獎 (Spin Wheel)", 
+                "大富翁 / 骰子前進 (Board Game)", 
+                "寶箱 / 神秘禮盒 (Mystery Box)", 
+                "氣球戳破 (Pop the Balloon)", 
+                "投幣許願池 (Wishing Well)", 
+                "打地鼠 (Whack-a-Mole)", 
+                "接水果 (Catching Fruit)", 
+                "禮物盒 / 聖誕拆禮 (Gift Box)", 
+                "飲料機 / 自助點餐機 (Vending Machine)", 
+                "放天燈 / 孔明燈 (Sky Lantern)", 
+                "祈福牆 / 願望板 (Wish Wall)", 
+                "香爐 / 點香祈福 (Incense Offering)", 
+                "找詞遊戲 (Word Search Puzzle)", 
+                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)",
+                "其他"
+            ];
+            
+            const answerMechanismOptions = [
+                 { value: "3選1答案", label: "3選1答案" },
+                 { value: "4選1答案", label: "4選1答案" },
+                 { value: "多選題", label: "多選題" },
+                 { value: "輸入文字 (Text Input)", label: "輸入文字 (Text Input)" },
+                 { value: "其他", label: "其他" }
+            ];
+
+            const interactionTypes = [
+                // 基礎題型 REMOVED
+                
+                // 操作與排序
+                "點擊 (Click)",
+                "拖拉物件 (Drag & Drop)",
+                "拖拉排序 (Drag & Drop Ordering)",
+                "連線題 (Connect the Dots)",
+                "圖詞配對 (Matching)",
+                "翻卡 / 翻牌記憶配對 (Memory Flip Cards)",
+                "滑桿調節 / 數值控制 (Slider Control)",
+                "旋轉 / 放大物件",
+                
+                // 創作與藝術
+                "畫布繪圖 / 自由創作 (Drawing Canvas)",
+                "填色 / 上色 (Coloring)",
+                "拼圖 / 拼合碎片 (Jigsaw Puzzle)",
+                "角色換裝 / 文化服飾試穿 (Virtual Dress-Up)",
+                
+                // 模擬與探索
+                "物理模擬 (Physics Simulation)",
+                "模擬操作 (Simulation Control)",
+                "地圖探索 / 點擊探索 (Map Exploration)",
+                "隱藏物件尋找 (Hidden Object Game)",
+                "角色裝備 / 升級系統 (Inventory / Upgrade)",
+                
+                // 敘事與情境
+                "角色扮演 / 對話選擇 (Branching Dialogue)",
+                "情境選擇 → 後果反饋 (Moral Dilemma)",
+                "角色對話輪流朗讀 (Read-Aloud)",
+                "故事接龍 / 共創文本 (Collaborative Story)",
+                
+                // 多感官與其他
+                "手勢控制 / 感應器互動",
+                "音頻辨識 / 錄音互動",
+                "社交互動 / 分享成就",
+                "時間限制挑戰",
+                "其他"
+            ];
+
+            const learningDiversityOptions = [
+                { label: "簡化內容 (Simplify Content)", desc: "使用簡單詞彙、短句，避免冗長說明；一次只教一個概念。" },
+                { label: "多感官輸入 (Multi-sensory)", desc: "結合圖片、聲音、動作、觸覺等多管道刺激，提升理解與記憶。" },
+                { label: "結構化與重複 (Structure & Repetition)", desc: "提供清晰步驟、固定流程與反覆練習機會。" },
+                { label: "即時回饋與獎勵 (Instant Feedback)", desc: "每完成一步即給予肯定（聲音、動畫、貼紙等），增強動機。" },
+                { label: "視覺輔助 (Visual Aids)", desc: "使用圖卡、流程圖、顏色區分、大字體、高對比界面。" },
+                { label: "生活化內容 (Real-life Context)", desc: "教學連結日常生活（如購物、交通、衛生），提升實用性。" },
+                { label: "語音朗讀題目 (TTS Question - HK)", desc: "題目提供廣東話語音朗讀功能。" },
+                { label: "語音朗讀答案 (TTS Answer - HK)", desc: "答案提供廣東話語音朗讀功能。" },
+                { label: "視覺提示 (Visual Cues)", desc: "加入箭頭、色塊、進度條等視覺提示。" }
+            ];
+
+            const values = [
+                "堅毅", "尊重他人", "責任感", "國民身份認同", "承擔精神", 
+                "誠信", "仁愛", "守法", "同理心", "勤勞", "團結", "孝親"
+            ];
+
+            const grades = [
+                "小學一年級 (P1)", 
+                "小學二年級 (P2)", 
+                "小學三年級 (P3)", 
+                "小學四年級 (P4)", 
+                "小學五年級 (P5)", 
+                "小學六年級 (P6)", 
+                "中學一年級 (S1)", 
+                "中學二年級 (S2)", 
+                "中學三年級 (S3)", 
+                "中學四年級 (S4)", 
+                "中學五年級 (S5)", 
+                "中學六年級 (S6)"
+            ];
+
+            const difficultyLevels = [
+                { value: "初階", label: "初階" },
+                { value: "中階", label: "中階" },
+                { value: "高階", label: "高階" }
+            ];
+
+            // Logic to handle Rule changes
+            const handleRuleChange = (index, value) => {
+                const newRules = [...formData.rules];
+                newRules[index] = value;
+                setFormData({ ...formData, rules: newRules });
+            };
+
+            const addRule = () => {
+                setFormData({ ...formData, rules: [...formData.rules, ""] });
+            };
+
+            const removeRule = (index) => {
+                const newRules = formData.rules.filter((_, i) => i !== index);
+                setFormData({ ...formData, rules: newRules });
+            };
+
+            // Logic to handle Example changes
+            const handleExampleChange = (index, field, value) => {
                 const newExamples = [...formData.examples];
                 newExamples[index] = { ...newExamples[index], [field]: value };
-                updateField('examples', newExamples);
+                setFormData({ ...formData, examples: newExamples });
+            };
+
+            const addExample = () => {
+                setFormData({ ...formData, examples: [...formData.examples, { text: "", level: "初階", count: 10, mechanism: "3選1答案" }] });
             };
 
             const removeExample = (index) => {
                 const newExamples = formData.examples.filter((_, i) => i !== index);
-                updateField('examples', newExamples);
+                setFormData({ ...formData, examples: newExamples });
             };
 
-            // Logic Generators
-            const generateDesignPrompt = useCallback(() => {
-                const rulesList = formData.rules.filter(r => r.trim()).map((r, i) => `${i + 1}. ${r}`).join("\n    ");
-                const diversityList = formData.learningDiversity.map(d => {
-                    const opt = DIVERSITY_OPTIONS.find(o => o.label === d);
-                    return `* **${d}**：${opt ? opt.desc : ""}`;
-                }).join("\n    ");
-                
-                const style = formData.gameStyle === "其他" ? formData.gameStyleCustom : formData.gameStyle;
-                const subject = formData.subjectCategory === "其他" ? formData.subjectCustom : formData.subjectCategory;
-                
-                // Format Examples
-                const examplesString = formData.examples.map((ex, i) => 
-                    `* **範例 ${i+1}**：${ex.text || "(未輸入)"}\n      - 題型：${ex.mechanism}\n      - 數量：${ex.count}題\n      - 程度：${ex.level}`
-                ).join("\n    ");
+            // Generic Helper to toggle array selections
+            const toggleSelection = (field, item) => {
+                setFormData(prev => {
+                    const current = prev[field];
+                    if (current.includes(item)) {
+                        return { ...prev, [field]: current.filter(t => t !== item) };
+                    } else {
+                        return { ...prev, [field]: [...current, item] };
+                    }
+                });
+            };
 
+            // Validate Step function
+            const validateStep = () => {
+                if (step === 2) {
+                    if (!formData.purpose || formData.purpose.trim() === "") {
+                        alert("請填寫「核心用途 (Core Purpose)」。\n這是設計教學工具最重要的部分！");
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            const handleNext = () => {
+                if (validateStep()) {
+                    setStep(step + 1);
+                }
+            };
+
+            // Generate the Master Prompt
+            const generateDesignPrompt = () => {
+                const rulesList = formData.rules.filter(r => r.trim() !== "").map((r, i) => `${i + 1}. ${r}`).join("\n    ");
+                const examplesList = formData.examples.filter(ex => ex.text.trim() !== "").map((ex, i) => `* [${ex.level}] (${ex.mechanism}) ${ex.text} (請生成 ${ex.count || 10} 題近似題目)`).join("\n    ");
+                const isGame = formData.category === "教學遊戲";
+                
+                const subject = formData.subjectCategory === "其他" ? formData.subjectCustomInput : formData.subjectCategory;
+                
+                // Game Style is now a single string
+                const style = formData.gameStyle === "其他" ? formData.gameStyleCustomInput : formData.gameStyle;
+                
+                let interactions = [...formData.interactionType];
+                if (interactions.includes("其他")) {
+                    interactions = interactions.filter(i => i !== "其他");
+                    if (formData.interactionCustomInput.trim()) {
+                        interactions.push(formData.interactionCustomInput);
+                    }
+                }
+                const interaction = interactions.length > 0 ? interactions.join("、") : "未指定";
+
+                const diversityList = formData.learningDiversity.map(opt => {
+                    const option = learningDiversityOptions.find(o => o.label === opt);
+                    return `* **${opt}**：${option ? option.desc : ""}`;
+                }).join("\n    ");
+
+                const valuesStr = formData.value.length > 0 ? formData.value.join("、") : "無";
+                
                 let prompt = `# 1. 角色設定 (Role)
 你是一位擁有 15 年經驗的「資深前端工程師」與「教育科技（EdTech）UX 專家」，專注於為小學生至中學生（具特殊教育需求的學習者）設計直觀、高互動性且符合無障礙標準（WCAG 2.1）的網頁學習工具。你擅長使用 HTML5、CSS3 與 Vanilla JavaScript 開發輕量、響應式、無需外部依賴的應用，並偏好運用 Emoji、CSS 動畫、正向回饋機制 與多感官提示（如顏色、聲音、點擊動效）來提升學習動機與參與度。
 
 你的任務是協助教育工作者（如教師或課程設計者）打造一個在桌機與行動裝置上皆直觀易用的線上學習平台。請以顧問式口吻，具批判性及建設性思考角度，不要盲目服從，找到設計的邏輯問題、設計盲點，請特別從以下角度進行批判性檢視：
-•「檢視『遊戲－問答交替循環』機制是否邏輯清晰
+•「檢視『遊戲－問答交替循環』機制是否邏輯清晰,如「本工具採用『情境遊戲 → 觸發問答 → 回饋 → 返回遊戲』的循環模式，問答以全屏彈窗呈現，完成後自動返回原遊戲場景。」
 •模擬工具的機制是否直觀容易明白？
 •學習工具的排板是否有誤?
 • 行動裝置上的互動模式是否符合無障礙標準？
@@ -346,414 +589,1050 @@
 ****「以下為專案配置，請據此分析」
 
 # 2. 專案參數配置 (Configuration)
-* **工具名稱**：${formData.toolName || "[未命名]"}
+**請根據以下設定，構建程式的邏輯與內容：**
+
+* **工具名稱**：${formData.toolName || "[未命名工具]"}
 * **工具範疇**：${formData.category}
-* **科目**：${subject}
+* **科目**：${subject || "未指定"}
+${isGame ? `* **遊戲風格 (Game Style)**：${style} (請以此風格作為主要的視覺隱喻與互動包裝)
+    * **遊戲機制說明**：「遊戲階段」：純粹遊戲(無知識），僅作為學習間的動機調節器，所有知識傳遞僅發生於問答彈窗。「遊戲－問答交替循環」模式， 進行遊戲機制後會彈出一個問題， 無論答對或答錯，皆給予即時回饋，並返回下一個關卡，此循環持續進行，直到完成預設題數。` : ""}
+* **互動機制**：${interaction}
+${isGame ? `* **遊戲模式需求**：請生成 **三種遊戲模式**，每種模式需分開 **初階、中階、高階** 三種難度。` : ""}
+${examplesList ? `* **範例題目 (Example Questions)**：\n    ${examplesList}` : ""}
 * **核心用途**：${formData.purpose}
-* **目標學生**：${formData.grade}
-* **學生智能需求 (SEN Level)**：${formData.senLevel}
-* **互動機制**：${formData.interactions.join("、")} ${formData.interactionCustom ? `、${formData.interactionCustom}` : ""}
-${formData.category === "教學遊戲" ? `* **遊戲風格**：${style} (以此風格為視覺隱喻)\n* **遊戲機制**：遊戲與問答交替循環。` : ""}
-* **題目範例與設定 (Question Examples)**：
-    ${examplesString || "無題目範例"}
-* **照顧學習差異**：
+* **目標學生年級**：${formData.grade}
+* **支援需求 (SEN Support)**：${formData.senLevel}
+    * *邏輯設定：「中度」需更多視覺輔助、少字多圖、詞彙簡單；「輕度」可包含較多文字說明。*
+* **照顧學習差異 (Learning Diversity Support)**：
     ${diversityList || "無特殊設定"}
-* **融入價值觀**：${formData.value.join("、")}
-* **具體規則**：
+* **生活情境設定**：${formData.context || "一般教室情境"}
+* **融入價值觀**：${valuesStr}
+* **具體規則與邏輯**：
     ${rulesList || "無特殊規則"}
 
-# 3. 設計與教育原則
-1. **視覺友善**：大字體、高對比、可愛卡通風格。
-2. **即時反饋**：正確✅+音效，錯誤❌+溫和提示。
-3. **成長型思維**：絕不責備，鼓勵再試一次。
-4. **無障礙**：支援鍵盤導航與螢幕閱讀器友善結構。
+# 3. 設計與教育原則 (Design & Pedagogical Principles)
+**請嚴格遵守以下 5 大原則：**
 
-# 4. 智能教學邏輯
-${formData.category === "教學遊戲" ? `
-* **🟢 初階**：直球答案 + 圖像提示。
-* **🟡 進階**：解釋因果關係。
-* **🔴 高階**：引導反問機制。` : "根據學生表現動態調整提示層級。"}
+1.  **🌈 視覺友善 (Visual Friendliness)**
+    * **風格**：可愛卡通、色彩明亮、大字體（Large Fonts）。
+    * **排版**：採用 "Bento Grid" (便當盒式佈局) 或 "Glassmorphism" (毛玻璃特效)。
+    * **原則**：Show, don't tell（用大圖示與清晰動畫代替冗長說明）。
+    * **RWD**：必須同時完美支援電腦（投影用）與平板（iPad 操作用）。
 
-# 5. 遊戲化結算
-顯示個別化報告：得分、錯誤分析、適性化建議（如下次挑戰難度）。
+2.  **🧠 認知支援 (Cognitive Support)**
+    * **即時反饋**：正確顯示 ✅ + 愉悅音效；錯誤顯示 ❌ + 溫和提示音。
+    * **容錯設計**：必須提供「撤銷 (Undo)」或「重試」按鈕。
+    * **步驟拆解**：將複雜任務分解為清晰的單一步驟。
+
+3.  **🌍 生活連結 (Real-life Context)**
+    * 情境設定需貼近學生生活（如：${formData.context || "日常生活"}）。
+    * 優先連結獨立生活技能（Social & Life Skills）。
+
+4.  **❤️ 情緒支持 (Emotional Support)**
+    * **成長型思維**：錯誤時**絕不責備**（顯示：「再試一次！」、「差一點點！」）。
+    * **正向增強**：任務完成時，給予強烈視覺回饋（如星星飛出、掌聲）。
+
+5.  **🛡️ 安全與價值觀 (Safety & Values)**
+    * **價值觀滲透**：在回饋或介面角落自然融入「${valuesStr}」的概念。
 `;
+
+                if (isGame) {
+                    prompt += `
+# 4. 智能教學邏輯 (AI Scaffolding Logic)
+**程式需內建以下三階回應機制，根據學生表現動態調整：**
+
+* **🟢 初階 (Level 1: Visual)**：一句話直球答案 + 核心 Emoji/圖片。（適用：剛開始或中度支援需求）
+* **🟡 進階 (Level 2: Logic)**：簡短解釋因果關係（兩句話內）。（適用：已掌握名詞）
+* **🔴 高階 (Level 3: Metacognition)**：解釋 + 引導反問（例如：「你可以問我...」）。（適用：表現優異者）
+
+# 5. 遊戲化結算系統 (Game Over & Report)
+當活動結束時，顯示「個別化報告」畫面：
+
+1.  **表現分析**：顯示總分，錯誤列表，常犯錯誤，已掌握的知識，給予一些建議（語氣溫和）。
+2.  **適性化建議 (Adaptive Recommendation)**：
+    * *錯誤率 > 40%*：建議「多練習初階，加油，你可以的」。
+    * *錯誤率 10-40%*：建議「做得很好，繼續穩固知識」。
+    * *錯誤率 < 10%*：建議「你是專家了！挑戰下一階吧！」。
+3.  **導航**：必須包含「重玩」與「返回主選單」按鈕。
+`;
+                }
+
                 return prompt;
-            }, [formData]);
+            };
 
-            const generateTechPrompt = useCallback(() => {
-                return `# 6. 技術規格 (Technical Stack)
-請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：
+            // 2. Generate Technical Prompt (Step 6 + Execution)
+            const generateTechPrompt = () => {
+                 // Preference Settings Text
+                 const preferenceSettingsText = `* **🛠️ 偏好設定模組 (Preference Settings)**:
+        網頁右上角有一個隱藏式偏好設定模組，藍色正方形背景 + 白色三條水平滑桿圖示，點擊按鈕後，從右側或下方滑入/淡入彈出選單。
+        - **功能一**：字體大小（6級）：小小的(14px)｜小一點(16px)｜剛剛好(18px)｜大一點(22px)｜大大的(26px)｜超～大(32px)。
+        - **功能二**：說話速度（6級）：0.5｜0.6｜0.7｜0.8｜0.9｜1.0（倍速），標題：「說話速度」，輔助視覺：左側標註 🐢「慢慢說」，右側標註 🐇「快快說」。`;
 
-1. **Core Framework**: React (Functional Components + Hooks).
-2. **Styling**: Tailwind CSS (配色需活潑、高對比、護眼).
-3. **Icons**: Lucide-React.
-4. **Animation**: Framer Motion (所有點擊、切換、得分、進場都必須有流暢動畫).
-5. **UI Library**: 使用 shadcn/ui 風格的組件設計.
-6. **必備功能**:
+                let prompt = `根據你的建議，
+
+# 6. 技術規格 (Technical Stack):
+${formData.isGemini ? "請生成一個完整的**單一 HTML 檔案** ，並包含以下技術實作：" : ""}
+
+1.  **Core Framework**: React (Functional Components + Hooks).
+2.  **Styling**: Tailwind CSS (配色需活潑、高對比、護眼).
+3.  **Icons**: Lucide-React.
+4.  **Animation**: Framer Motion (所有點擊、切換、得分、進場都必須有流暢動畫).
+5.  **UI Library**: 使用 shadcn/ui 風格的組件設計.
+6.  **必備功能**:
     * **🔊 語音功能**: 有on/off功能, 若實作 \`speak\` 函式，請將 \`lang\` 預設值設為 \`'zh-HK'\`。
-    * **🛠️ 偏好設定模組 (Preference Settings)**:
-       網頁右上角有一個隱藏式偏好設定模組，藍色正方形背景 + 白色三條水平滑桿圖示，點擊按鈕後，從右側或下方滑入/淡入彈出選單。
-       - **功能一**：字體大小（6級）：1(14px)｜2(16px)｜3(18px)｜4(22px)｜5(26px)｜6(32px)。
-       - **功能二**：說話速度（6級）：0.5｜0.6｜0.7｜0.8｜0.9｜1.0（倍速），標題：「說話速度」，輔助視覺：左側標註🐢「慢慢說」，右側標註🐇「快快說」。
+    ${formData.includePreferenceSettings ? preferenceSettingsText : ""}
     * **⬅️ 導航**: 左上方必須有一個顯眼的「返回主頁」按鈕。
-    * **💾 儲存 (Download HTML)**:於主頁左下角設置提供「⬇️ 下載 HTML」按鈕，供使用者一鍵下載當前網頁完整 HTML 原始碼的能力，便於教師備份教學頁面。
+    * **💾 儲存 (Download HTML)**: 於主頁左下角設置提供「⬇️ 下載 HTML」按鈕，供使用者一鍵下載當前網頁完整 HTML 原始碼的能力，便於教師備份教學頁面。
     * **🦶 頁尾與版權 (Footer)**: 頁面最底端顯示置中文字：\`©2025 WMC\`。
     * **🏷️ 懸浮標籤 (FAB)**: 
-       - 位置：右下角固定 (Fixed)。
-       - 樣式：使用彩虹般的全息色（holographic/iridescent），隨視角或時間微變，外框與文字，半透明材質，營造未來感。帶有電腦型圖示。
-       - 內容：「WMC ${formData.teacherName || '(老師名字)'} 設計」。
+        - 位置：右下角固定 (Fixed)。
+        - 樣式：使用彩虹般的全息色（holographic/iridescent），隨視角或時間微變，外框與文字，半透明材質，營造未來感。帶有電腦型圖示。
+        - 內容：「WMC ${formData.teacherName || 'TDA'} 設計」。
 
 # 執行任務 (Execution)
-請根據上述配置，編寫完整的程式碼。程式碼需包含完整的 UI 佈局、邏輯處理、以及上述的三階 AI 回應內容模擬。`;
-            }, [formData]);
-
-            const generateFullPrompt = () => {
-                return generateDesignPrompt() + "\n\n" + generateTechPrompt();
+請根據上述配置，編寫完整的程式碼。程式碼需包含完整的 UI 佈局、邏輯處理${formData.category === "教學遊戲" ? "、以及上述的三階 AI 回應內容模擬" : ""}。`;
+                return prompt;
             };
 
-            const handleCopy = (text, section) => {
-                navigator.clipboard.writeText(text);
-                setCopiedSection(section);
-                setTimeout(() => setCopiedSection(null), 2000);
+            const handleCopyDesign = () => {
+                const text = generateDesignPrompt();
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setCopiedDesign(true);
+                    setTimeout(() => setCopiedDesign(false), 2000);
+                } catch (err) {
+                    console.error('Unable to copy', err);
+                }
+                document.body.removeChild(textArea);
             };
 
-            const handleExportWord = () => {
-                if (!window.docx) { alert("DOCX library loading..."); return; }
+            const handleCopyTech = () => {
+                const text = generateTechPrompt();
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setCopiedTech(true);
+                    setTimeout(() => setCopiedTech(false), 2000);
+                } catch (err) {
+                    console.error('Unable to copy', err);
+                }
+                document.body.removeChild(textArea);
+            };
+
+            // Handlers for Save JSON and Export DOCX
+            const handleSaveJSON = () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "tda_data.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            };
+
+            const handleExportDOCX = () => {
+                const designText = generateDesignPrompt();
+                const techText = generateTechPrompt();
+                const fullText = designText + "\n\n" + techText;
+
+                if (!window.docx) {
+                     alert("DOCX library not loaded. Please try again later.");
+                     return;
+                }
                 const { Document, Packer, Paragraph, TextRun } = window.docx;
-                const text = generateFullPrompt();
+                
+                const lines = fullText.split('\n');
+                const children = lines.map(line => new Paragraph({
+                    children: [new TextRun({
+                        text: line || " ",
+                        font: "Arial"
+                    })],
+                    spacing: {
+                        after: 200,
+                    }
+                }));
+
                 const doc = new Document({
                     sections: [{
                         properties: {},
-                        children: text.split('\n').map(line => new Paragraph({
-                            children: [new TextRun({ text: line, font: "Arial" })]
-                        }))
-                    }]
+                        children: children,
+                    }],
                 });
+
                 Packer.toBlob(doc).then(blob => {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
+                    document.body.appendChild(a);
                     a.href = url;
-                    a.download = `${formData.toolName || "TDA_Prompt"}.docx`;
+                    a.download = 'tda_prompt.docx';
                     a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }).catch(err => {
+                    console.error(err);
+                    alert("匯出 Word 檔案失敗 (Export Failed)");
                 });
             };
+            
+            // Handler for Import JSON
+            const handleImportJSON = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
 
-            // Render Steps
-            return (
-                <div className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto">
-                    {/* Header */}
-                    <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-3 rounded-xl ${theme === 'cyber' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-blue-600 text-white'}`}>
-                                <Wand2 size={32} />
-                            </div>
-                            <div>
-                                <h1 className={`text-2xl md:text-3xl font-black tracking-tight ${theme === 'cyber' ? 'text-white' : 'text-slate-800'}`}>
-                                    WMC TDA <span className="font-light opacity-60">PROMPT BUILDER</span>
-                                </h1>
-                                <p className={`text-xs font-mono tracking-widest ${theme === 'cyber' ? 'text-cyan-500' : 'text-slate-500'}`}>教學設計輔助工具提詞器</p>
-                            </div>
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        // Basic validation could be added here
+                        setFormData(json);
+                        alert("匯入成功！ (Import Successful)");
+                    } catch (error) {
+                        console.error("Error parsing JSON:", error);
+                        alert("匯入失敗，請確認檔案格式正確。 (Import Failed)");
+                    }
+                };
+                reader.readAsText(file);
+                
+                // Clear the input so the same file can be selected again
+                event.target.value = ''; 
+            };
+
+            // Trigger file input click
+            const triggerFileInput = () => {
+                fileInputRef.current.click();
+            };
+
+            // --- Step Rendering ---
+
+            const renderStep1 = () => (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="col-span-1 md:col-span-2">
+                            <Label theme={theme}>1. 教職員名字 (Teacher Name)</Label>
+                            <Input 
+                                theme={theme}
+                                placeholder="請輸入您的名字 (例如: 陳老師)" 
+                                value={formData.teacherName}
+                                onChange={(e) => setFormData({...formData, teacherName: e.target.value})}
+                            />
                         </div>
-                        <button onClick={() => setTheme(t => t === 'cyber' ? 'plain' : 'cyber')} className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${theme === 'cyber' ? 'bg-slate-800 text-yellow-400 border border-slate-700' : 'bg-white text-slate-600 shadow-md border border-slate-100'}`}>
-                            {theme === 'cyber' ? <Sun size={18}/> : <Moon size={18}/>}
-                            <span className="text-xs font-bold">{theme === 'cyber' ? 'CYBER' : 'PLAIN'}</span>
-                        </button>
-                    </header>
 
-                    {/* Progress */}
-                    <div className="mb-8 flex gap-2">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= i ? (theme === 'cyber' ? 'bg-cyan-500' : 'bg-blue-600') : (theme === 'cyber' ? 'bg-slate-800' : 'bg-slate-300')}`} />
-                        ))}
-                    </div>
+                        <div className="col-span-1 md:col-span-2">
+                            <Label theme={theme}>2. 工具名稱 (Tool Name)</Label>
+                            <Input 
+                                theme={theme}
+                                placeholder="例如：快樂農場加法練習、課堂情緒溫度計..." 
+                                value={formData.toolName}
+                                onChange={(e) => setFormData({...formData, toolName: e.target.value})}
+                            />
+                        </div>
 
-                    <AnimatePresence mode="wait">
-                        <motion.div 
-                            key={step}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            {/* STEP 1: Basic Info */}
-                            {step === 1 && (
-                                <Card theme={theme} className="space-y-6">
-                                    <h2 className="text-xl font-bold flex items-center gap-2 mb-6"><Settings2 className="text-cyan-500"/> 基礎設定 (Basic Info)</h2>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <Label theme={theme}>教職員名字</Label>
-                                            <Input theme={theme} value={formData.teacherName} onChange={e => updateField('teacherName', e.target.value)} placeholder="例如：陳老師" />
-                                        </div>
-                                        <div>
-                                            <Label theme={theme}>工具名稱</Label>
-                                            <Input theme={theme} value={formData.toolName} onChange={e => updateField('toolName', e.target.value)} placeholder="例如：快樂數學農場" />
-                                        </div>
+                        <div>
+                            <Label theme={theme}>3. 工具範疇 (Category)</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat.value}
+                                        onClick={() => setFormData({...formData, category: cat.value})}
+                                        className={`flex items-center p-3 rounded-xl border transition-all ${
+                                            theme === 'cyber'
+                                            ? formData.category === cat.value 
+                                                ? 'border-cyan-500 bg-cyan-900/30 text-cyan-200 ring-1 ring-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                            : formData.category === cat.value
+                                                ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                        }`}
+                                    >
+                                        <cat.icon size={20} className="mr-3" />
+                                        <span className="font-medium">{cat.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+           
+                            {/* Subject Selection - Moved to top level */}
+                            <div className="mt-6">
+                                <Label theme={theme}>4. 科目 (Subject)</Label>
+                                <Select 
+                                    theme={theme}
+                                    options={subjects.map(s => ({value: s, label: s}))}
+                                    value={formData.subjectCategory}
+                                    onChange={(e) => setFormData({...formData, subjectCategory: e.target.value})}
+                                />
+                                {formData.subjectCategory === "其他" && (
+                                    <div className="mt-2">
+                                        <Input
+                                            theme={theme}
+                                            placeholder="請輸入科目名稱..."
+                                            value={formData.subjectCustomInput}
+                                            onChange={(e) => setFormData({...formData, subjectCustomInput: e.target.value})}
+                                            autoFocus
+                                        />
                                     </div>
+                                )}
+                            </div>
 
-                                    <div>
-                                        <Label theme={theme}>工具範疇</Label>
-                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                            {CATEGORIES.map(cat => (
-                                                <button key={cat.value} onClick={() => updateField('category', cat.value)} className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${formData.category === cat.value ? (theme === 'cyber' ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-blue-50 border-blue-600 text-blue-800') : (theme === 'cyber' ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-200 hover:bg-slate-50')}`}>
-                                                    <cat.icon size={20} />
-                                                    <span className="text-xs font-bold">{cat.label}</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                            {/* Game Style Selection - Always Visible */}
+                            <div className="mt-6 space-y-4">
+                                <div>
+                                    <Label theme={theme}>遊戲風格 (Game Style)</Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {gameStyles.map(style => (
+                                            <button
+                                                key={style}
+                                                onClick={() => setFormData({...formData, gameStyle: style})}
+                                                className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
+                                                    theme === 'cyber'
+                                                    ? formData.gameStyle === style
+                                                        ? 'border-pink-500 bg-pink-900/30 text-pink-200 ring-1 ring-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.3)]' 
+                                                        : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                                    : formData.gameStyle === style
+                                                        ? 'border-pink-500 bg-pink-50 text-pink-700 ring-1 ring-pink-500'
+                                                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                                }`}
+                                            >
+                                                {style}
+                                            </button>
+                                        ))}
                                     </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        <div>
-                                            <Label theme={theme}>適用年級</Label>
-                                            <Select theme={theme} options={GRADES} value={formData.grade} onChange={e => updateField('grade', e.target.value)} />
-                                        </div>
-                                        <div>
-                                            <Label theme={theme}>科目</Label>
-                                            <Select theme={theme} options={SUBJECTS} value={formData.subjectCategory} onChange={e => updateField('subjectCategory', e.target.value)} />
-                                            {formData.subjectCategory === "其他" && (
-                                                <Input theme={theme} className="mt-2" placeholder="請輸入科目..." value={formData.subjectCustom} onChange={e => updateField('subjectCustom', e.target.value)} />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <Label theme={theme}>學生智能需求 (SEN)</Label>
-                                            <Select theme={theme} options={SEN_OPTIONS} value={formData.senLevel} onChange={e => updateField('senLevel', e.target.value)} />
-                                        </div>
-                                    </div>
-
-                                    {/* Question Examples Section */}
-                                    <div className={`mt-8 pt-6 border-t ${theme === 'cyber' ? 'border-slate-800' : 'border-slate-200'}`}>
-                                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                            <ListPlus className={theme === 'cyber' ? 'text-purple-400' : 'text-purple-600'} size={20}/>
-                                            題目範例設定 (Question Examples)
-                                        </h3>
-                                        
-                                        <div className="space-y-4">
-                                            {formData.examples.map((ex, idx) => (
-                                                <div key={idx} className={`p-4 rounded-xl border relative transition-all ${theme === 'cyber' ? 'bg-slate-900/50 border-slate-700 hover:border-slate-500' : 'bg-slate-50 border-slate-300 hover:border-blue-400'}`}>
-                                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                                                        <div className="md:col-span-6">
-                                                            <label className="text-xs font-bold opacity-70 mb-1 block">問題例子 (Example Question)</label>
-                                                            <Input 
-                                                                theme={theme} 
-                                                                placeholder="例如：請計算 5 + 3 = ?" 
-                                                                value={ex.text} 
-                                                                onChange={(e) => updateExample(idx, 'text', e.target.value)}
-                                                                className="!py-2 !text-sm"
-                                                            />
-                                                        </div>
-                                                        <div className="md:col-span-3">
-                                                            <label className="text-xs font-bold opacity-70 mb-1 block">題型 (Type)</label>
-                                                            <Select 
-                                                                theme={theme} 
-                                                                options={QUESTION_TYPES} 
-                                                                value={ex.mechanism} 
-                                                                onChange={(e) => updateExample(idx, 'mechanism', e.target.value)}
-                                                            />
-                                                        </div>
-                                                        <div className="md:col-span-2">
-                                                            <label className="text-xs font-bold opacity-70 mb-1 block">程度 (Level)</label>
-                                                            <Select 
-                                                                theme={theme} 
-                                                                options={DIFFICULTY_LEVELS} 
-                                                                value={ex.level} 
-                                                                onChange={(e) => updateExample(idx, 'level', e.target.value)}
-                                                            />
-                                                        </div>
-                                                        <div className="md:col-span-1">
-                                                            <label className="text-xs font-bold opacity-70 mb-1 block">數量 (Qty)</label>
-                                                            <Input 
-                                                                type="number" 
-                                                                theme={theme} 
-                                                                value={ex.count} 
-                                                                onChange={(e) => updateExample(idx, 'count', e.target.value)}
-                                                                className="!py-2 !text-sm text-center"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {formData.examples.length > 1 && (
-                                                        <button 
-                                                            onClick={() => removeExample(idx)}
-                                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform"
-                                                            title="移除此範例"
-                                                        >
-                                                            <Trash2 size={14}/>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        <button 
-                                            onClick={addExample}
-                                            className={`mt-4 w-full py-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all font-bold ${theme === 'cyber' ? 'border-slate-700 text-slate-400 hover:border-purple-500 hover:text-purple-400 hover:bg-purple-500/10' : 'border-slate-300 text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'}`}
-                                        >
-                                            <Plus size={18}/> 新增更多題目範例
-                                        </button>
-                                    </div>
-                                </Card>
-                            )}
-
-                            {/* STEP 2: Core Purpose & Context */}
-                            {step === 2 && (
-                                <Card theme={theme} className="space-y-6">
-                                    <h2 className="text-xl font-bold flex items-center gap-2 mb-6"><Code className="text-cyan-500"/> 教學核心 (Core & Context)</h2>
-                                    
-                                    <div>
-                                        <Label theme={theme}>核心用途 (教學目標)</Label>
-                                        <TextArea theme={theme} value={formData.purpose} onChange={e => updateField('purpose', e.target.value)} placeholder="例如：讓學生透過遊戲練習 10 以內的加法運算，並培養數感..." />
-                                    </div>
-
-                                    <div>
-                                        <Label theme={theme}>生活情境設定</Label>
-                                        <Input theme={theme} value={formData.context} onChange={e => updateField('context', e.target.value)} placeholder="例如：超級市場購物、太空探險、海底世界..." />
-                                    </div>
-
-                                    <div>
-                                        <Label theme={theme}>融入價值觀 (多選)</Label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {VALUES.map(v => (
-                                                <button key={v} onClick={() => toggleSelection('value', v)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${formData.value.includes(v) ? (theme === 'cyber' ? 'bg-cyan-600 border-cyan-500 text-white' : 'bg-blue-600 border-blue-600 text-white') : (theme === 'cyber' ? 'border-slate-700 text-slate-400 hover:border-slate-500' : 'border-slate-300 text-slate-600 hover:bg-slate-50')}`}>
-                                                    {v}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </Card>
-                            )}
-
-                            {/* STEP 3: Interaction & Diversity */}
-                            {step === 3 && (
-                                <Card theme={theme} className="space-y-6">
-                                    <h2 className="text-xl font-bold flex items-center gap-2 mb-6"><Gamepad2 className="text-cyan-500"/> 互動與差異化 (Interaction)</h2>
-                                    
-                                    {formData.category === "教學遊戲" && (
-                                        <div>
-                                            <Label theme={theme}>遊戲風格</Label>
-                                            <Select theme={theme} options={GAME_STYLES} value={formData.gameStyle} onChange={e => updateField('gameStyle', e.target.value)} />
-                                            {formData.gameStyle === "其他" && (
-                                                <Input theme={theme} className="mt-2" placeholder="請輸入遊戲風格..." value={formData.gameStyleCustom} onChange={e => updateField('gameStyleCustom', e.target.value)} />
-                                            )}
+                                    {formData.gameStyle === "其他" && (
+                                        <div className="mt-2">
+                                            <Input
+                                                theme={theme}
+                                                placeholder="請輸入遊戲風格 (例如：射擊遊戲、迷宮)..."
+                                                value={formData.gameStyleCustomInput}
+                                                onChange={(e) => setFormData({...formData, gameStyleCustomInput: e.target.value})}
+                                                autoFocus
+                                            />
                                         </div>
                                     )}
+                                </div>
 
-                                    <div>
-                                        <Label theme={theme}>互動機制 (多選)</Label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {INTERACTION_TYPES.map(type => (
-                                                <button key={type} onClick={() => toggleSelection('interactions', type)} className={`px-3 py-1.5 rounded-lg text-sm transition-all border ${formData.interactions.includes(type) ? (theme === 'cyber' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-indigo-600 border-indigo-600 text-white') : (theme === 'cyber' ? 'border-slate-700 hover:border-slate-500' : 'border-slate-300 hover:bg-slate-50')}`}>
-                                                    {type}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label theme={theme}>學習差異支援 (SEN Support)</Label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {DIVERSITY_OPTIONS.map(opt => (
-                                                <button key={opt.label} onClick={() => toggleSelection('learningDiversity', opt.label)} className={`p-3 rounded-xl border text-left transition-all ${formData.learningDiversity.includes(opt.label) ? (theme === 'cyber' ? 'bg-green-900/30 border-green-500' : 'bg-green-50 border-green-600') : (theme === 'cyber' ? 'border-slate-800' : 'border-slate-200')}`}>
-                                                    <div className={`font-bold text-sm ${formData.learningDiversity.includes(opt.label) ? (theme === 'cyber' ? 'text-green-400' : 'text-green-700') : ''}`}>{opt.label}</div>
-                                                    <div className="text-xs opacity-60 mt-1">{opt.desc}</div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <Label theme={theme}>進階規則 (Rules)</Label>
-                                        {formData.rules.map((rule, idx) => (
-                                            <div key={idx} className="flex gap-2 mb-2">
-                                                <Input theme={theme} value={rule} onChange={e => updateRule(idx, e.target.value)} placeholder={`規則 ${idx+1}`} />
-                                                <button onClick={() => removeRule(idx)} className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg"><Trash2 size={18}/></button>
+                                {/* Example Questions - Updated Layout */}
+                                <div>
+                                    <Label theme={theme}>範例題目 (Example Questions)</Label>
+                                    <div className="space-y-4">
+                                        {formData.examples.map((ex, index) => (
+                                            <div key={index} className={`p-4 rounded-xl border ${theme === 'cyber' ? 'border-slate-700 bg-slate-800/30' : 'border-slate-200 bg-white'} space-y-3`}>
+                                                <div className="w-full">
+                                                    <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>題目內容</div>
+                                                    <textarea 
+                                                        className={`w-full px-4 py-3 rounded-xl outline-none min-h-[80px] resize-y ${theme === 'cyber' ? 'tech-input' : 'plain-input'}`}
+                                                        placeholder={`例如：蘋果是甚麼顏色？`}
+                                                        value={ex.text}
+                                                        onChange={(e) => handleExampleChange(index, 'text', e.target.value)}
+                                                    />
+                                                </div>
+                                                
+                                                <div className="flex flex-wrap gap-2 items-center">
+                                                    <div className="w-24">
+                                                        <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>難度</div>
+                                                        <Select 
+                                                            theme={theme}
+                                                            options={difficultyLevels}
+                                                            value={ex.level}
+                                                            onChange={(e) => handleExampleChange(index, 'level', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-[140px]">
+                                                        <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>答題機制</div>
+                                                        <Select 
+                                                            theme={theme}
+                                                            options={answerMechanismOptions}
+                                                            value={ex.mechanism}
+                                                            onChange={(e) => handleExampleChange(index, 'mechanism', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="w-20">
+                                                        <div className={`text-xs mb-1 opacity-70 ${theme === 'cyber' ? 'text-slate-300' : 'text-slate-600'}`}>數量</div>
+                                                        <Input 
+                                                            theme={theme}
+                                                            type="number"
+                                                            min="1"
+                                                            max="100"
+                                                            placeholder="數量"
+                                                            value={ex.count}
+                                                            onChange={(e) => handleExampleChange(index, 'count', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-end pb-1">
+                                                         <button 
+                                                            onClick={() => removeExample(index)}
+                                                            className={`p-3 rounded-xl transition-colors border border-transparent ${
+                                                                theme === 'cyber'
+                                                                ? 'text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:border-red-500/50'
+                                                                : 'text-red-500 hover:bg-red-50 hover:border-red-200'
+                                                            }`}
+                                                            disabled={formData.examples.length === 1}
+                                                            title="移除範例"
+                                                        >
+                                                            <Trash2 size={20} />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))}
-                                        <button onClick={addRule} className={`text-sm flex items-center gap-1 mt-2 ${theme === 'cyber' ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-700'}`}>
-                                            <Plus size={16}/> 新增規則
-                                        </button>
                                     </div>
-                                </Card>
-                            )}
-
-                            {/* STEP 4: Generate & Export */}
-                            {step === 4 && (
-                                <div className="space-y-6">
-                                    <div className="flex justify-end gap-2 mb-2">
-                                         <button onClick={handleExportWord} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${theme === 'cyber' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'}`}>
-                                            <Download size={16}/> 下載 Word (完整)
-                                        </button>
-                                    </div>
-                                    
-                                    {/* Part 1 */}
-                                    <Card theme={theme} className="flex flex-col">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-xl font-bold flex items-center gap-2"><Sparkles className="text-yellow-400"/> Part 1: 設計與教育原則 (#1-#5)</h2>
-                                            <button 
-                                                onClick={() => handleCopy(generateDesignPrompt(), 'part1')} 
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${copiedSection === 'part1' ? 'bg-green-500 text-white' : (theme === 'cyber' ? 'bg-cyan-600 hover:bg-cyan-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white')}`}
-                                            >
-                                                {copiedSection === 'part1' ? <CheckCircle size={14}/> : <Copy size={14}/>} {copiedSection === 'part1' ? '已複製' : '複製'}
-                                            </button>
-                                        </div>
-                                        <div className={`p-4 rounded-xl font-mono text-sm whitespace-pre-wrap overflow-y-auto max-h-[300px] ${theme === 'cyber' ? 'bg-black/40 text-cyan-50' : 'bg-slate-50 text-slate-800 border'}`}>
-                                            {generateDesignPrompt()}
-                                        </div>
-                                    </Card>
-
-                                    {/* Part 2 */}
-                                    <Card theme={theme} className="flex flex-col">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-xl font-bold flex items-center gap-2"><Code className="text-purple-400"/> Part 2: 技術規格 (#6)</h2>
-                                            <button 
-                                                onClick={() => handleCopy(generateTechPrompt(), 'part2')} 
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${copiedSection === 'part2' ? 'bg-green-500 text-white' : (theme === 'cyber' ? 'bg-purple-600 hover:bg-purple-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white')}`}
-                                            >
-                                                {copiedSection === 'part2' ? <CheckCircle size={14}/> : <Copy size={14}/>} {copiedSection === 'part2' ? '已複製' : '複製'}
-                                            </button>
-                                        </div>
-                                        <div className={`p-4 rounded-xl font-mono text-sm whitespace-pre-wrap overflow-y-auto max-h-[300px] ${theme === 'cyber' ? 'bg-black/40 text-cyan-50' : 'bg-slate-50 text-slate-800 border'}`}>
-                                            {generateTechPrompt()}
-                                        </div>
-                                    </Card>
+                                    <button 
+                                        onClick={addExample}
+                                        className={`mt-3 text-sm font-bold flex items-center px-4 py-2 rounded-lg border border-transparent transition-all ${
+                                            theme === 'cyber'
+                                            ? 'text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/30 hover:border-cyan-500/50'
+                                            : 'text-blue-600 hover:bg-blue-50 hover:border-blue-200'
+                                        }`}
+                                    >
+                                        <Plus size={16} className="mr-1" /> 新增範例
+                                    </button>
                                 </div>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-
-                    {/* Footer / Navigation */}
-                    <div className={`fixed bottom-0 left-0 w-full p-4 border-t backdrop-blur-md z-50 flex justify-between items-center ${theme === 'cyber' ? 'bg-slate-900/80 border-cyan-900/30' : 'bg-white/90 border-slate-200'}`}>
-                        <button 
-                            onClick={() => setStep(s => Math.max(1, s - 1))}
-                            disabled={step === 1}
-                            className={`flex items-center gap-2 px-6 py-2 rounded-xl font-bold transition-all ${step === 1 ? 'opacity-0 pointer-events-none' : (theme === 'cyber' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600')}`}
-                        >
-                            <ChevronLeft size={20}/> 上一步
-                        </button>
-                        
-                        <div className="flex gap-2">
-                            {[1,2,3,4].map(i => (
-                                <div key={i} className={`w-2 h-2 rounded-full transition-all ${step === i ? (theme === 'cyber' ? 'bg-cyan-400 scale-125' : 'bg-blue-600 scale-125') : (theme === 'cyber' ? 'bg-slate-700' : 'bg-slate-300')}`} />
-                            ))}
+                            </div>
                         </div>
 
-                        {step < 4 ? (
-                            <button 
-                                onClick={() => setStep(s => s + 1)}
-                                className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold shadow-lg transition-all ${theme === 'cyber' ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'}`}
-                            >
-                                下一步 <ChevronRight size={20}/>
-                            </button>
-                        ) : (
-                            <button 
-                                onClick={() => { setStep(1); setFormData({...formData, teacherName: ""}); }}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${theme === 'cyber' ? 'text-cyan-400 hover:bg-slate-800' : 'text-blue-600 hover:bg-blue-50'}`}
-                            >
-                                <RotateCcw size={18}/> 重置
-                            </button>
-                        )}
+                        <div className="space-y-6">
+                            <div>
+                                <Label theme={theme}>5. 目標年級 (Target Grade)</Label>
+                                <Select 
+                                    theme={theme}
+                                    options={grades.map(g => ({value: g, label: g}))}
+                                    value={formData.grade}
+                                    onChange={(e) => setFormData({...formData, grade: e.target.value})}
+                                />
+                            </div>
+
+                            <div>
+                                <Label theme={theme}>6. 支援需求 (SEN Support)</Label>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <button
+                                        onClick={() => setFormData({...formData, senLevel: "輕度 (Mild)"})}
+                                        className={`p-4 rounded-xl border text-left transition-all ${
+                                            theme === 'cyber'
+                                            ? formData.senLevel === "輕度 (Mild)" 
+                                                ? 'border-emerald-500 bg-emerald-900/30 text-emerald-200 ring-1 ring-emerald-500' 
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                            : formData.senLevel === "輕度 (Mild)"
+                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
+                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                        }`}
+                                    >
+                                        <div className={`font-bold tracking-wide ${theme === 'cyber' ? 'orbitron' : ''}`}>輕度需求 (Mild)</div>
+                                        <div className="text-xs opacity-70 mt-1">適合一般理解力，可包含較多文字說明與引導。</div>
+                                    </button>
+                                    <button
+                                        onClick={() => setFormData({...formData, senLevel: "中度 (Moderate)"})}
+                                        className={`p-4 rounded-xl border text-left transition-all ${
+                                            theme === 'cyber'
+                                            ? formData.senLevel === "中度 (Moderate)" 
+                                                ? 'border-orange-500 bg-orange-900/30 text-orange-200 ring-1 ring-orange-500' 
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                            : formData.senLevel === "中度 (Moderate)"
+                                                ? 'border-orange-500 bg-orange-50 text-orange-700 ring-1 ring-orange-500'
+                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                        }`}
+                                    >
+                                        <div className={`font-bold tracking-wide ${theme === 'cyber' ? 'orbitron' : ''}`}>中度需求 (Moderate)</div>
+                                        <div className="text-xs opacity-70 mt-1">需要高強度視覺輔助，少字多圖，詞彙簡單直接。</div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 7. Learning Diversity Support - New Section */}
+                            <div>
+                                <Label theme={theme}>7. 照顧學習差異 (Learning Diversity) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    {learningDiversityOptions.map(opt => (
+                                        <button
+                                            key={opt.label}
+                                            onClick={() => toggleSelection('learningDiversity', opt.label)}
+                                            className={`p-3 rounded-lg text-sm font-medium transition-all border text-left flex flex-col gap-1 h-full ${
+                                                formData.learningDiversity.includes(opt.label)
+                                                ? (theme === 'cyber' 
+                                                    ? 'border-cyan-500 bg-cyan-900/30 text-cyan-200 ring-1 ring-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                                                    : 'border-cyan-500 bg-cyan-50 text-cyan-800 ring-1 ring-cyan-500')
+                                                : (theme === 'cyber'
+                                                    ? 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                                    : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600')
+                                            }`}
+                                        >
+                                            <span className="font-bold">{opt.label}</span>
+                                            <span className="text-xs opacity-70 font-light">{opt.desc}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 8. Interaction Mechanism - Renumbered to 8 */}
+                        <div className={`col-span-1 md:col-span-2 pt-4 border-t ${theme === 'cyber' ? 'border-slate-800/50' : 'border-slate-200'}`}>
+                             <Label theme={theme}>8. 互動機制 (Interaction) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                               {interactionTypes.map(type => (
+                                 <button
+                                   key={type}
+                                   onClick={() => toggleSelection('interactionType', type)}
+                                   className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
+                                     theme === 'cyber'
+                                     ? formData.interactionType.includes(type)
+                                         ? 'border-violet-500 bg-violet-900/30 text-violet-200 ring-1 ring-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]' 
+                                         : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                     : formData.interactionType.includes(type)
+                                         ? 'border-violet-500 bg-violet-50 text-violet-700 ring-1 ring-violet-500'
+                                         : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                   }`}
+                                 >
+                                   {type}
+                                 </button>
+                               ))}
+                             </div>
+                             {formData.interactionType.includes("其他") && (
+                               <div className="mt-2">
+                                 <Input
+                                   theme={theme}
+                                   placeholder="請輸入互動方式 (例如：連連看、填空)..."
+                                   value={formData.interactionCustomInput}
+                                   onChange={(e) => setFormData({...formData, interactionCustomInput: e.target.value})}
+                                   autoFocus
+                                 />
+                               </div>
+                             )}
+                        </div>
                     </div>
-                    <div className="h-20"></div> {/* Spacer for fixed footer */}
+                </motion.div>
+            );
+
+            const renderStep2 = () => (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                    <div>
+                        <Label theme={theme}>5. 核心用途 (Core Purpose) <span className="text-red-500">*</span></Label>
+                        <div className={`text-xs mb-2 ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>請簡述這個工具要解決什麼問題？(必填)</div>
+                        <TextArea 
+                            theme={theme}
+                            placeholder="例如：讓學生透過拖放蘋果來練習 10 以內的加法，或是幫助自閉症學生指認當下的情緒..." 
+                            value={formData.purpose}
+                            onChange={(e) => setFormData({...formData, purpose: e.target.value})}
+                            className={!formData.purpose && step === 2 ? "border-red-500/50" : ""}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <Label theme={theme}>6. 生活情境設定 (Context)</Label>
+                            <Input 
+                                theme={theme}
+                                placeholder="例如：超級市場購物、搭乘地鐵、種植花朵..." 
+                                value={formData.context}
+                                onChange={(e) => setFormData({...formData, context: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <Label theme={theme}>7. 融入價值觀 (Values) <span className={`text-xs ml-1 font-normal ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-500'}`}>[可多選]</span></Label>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                {values.map(val => (
+                                    <button
+                                        key={val}
+                                        onClick={() => toggleSelection('value', val)}
+                                        className={`p-2 rounded-lg text-sm font-medium transition-all border text-left ${
+                                            theme === 'cyber'
+                                            ? formData.value.includes(val)
+                                                ? 'border-yellow-500 bg-yellow-900/30 text-yellow-200 ring-1 ring-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' 
+                                                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 text-slate-400'
+                                            : formData.value.includes(val)
+                                                ? 'border-yellow-500 bg-yellow-50 text-yellow-800 ring-1 ring-yellow-500'
+                                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                                        }`}
+                                    >
+                                        {val}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            );
+
+            const renderStep3 = () => (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                    <div>
+                        <Label theme={theme}>8. 具體規則與邏輯 (Rules)</Label>
+                        <div className={`text-xs mb-2 ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>請列出這個工具必須遵守的規則（例如：計分方式、匯入功能等）。</div>
+                        
+                        <div className="space-y-3">
+                            {formData.rules.map((rule, index) => (
+                                <div key={index} className="flex gap-2">
+                                    <div className={`flex-none pt-3 font-bold text-sm w-6 ${theme === 'cyber' ? 'text-cyan-500 orbitron' : 'text-blue-600'}`}>
+                                        {index + 1}.
+                                    </div>
+                                    <TextArea 
+                                        theme={theme}
+                                        value={rule} 
+                                        onChange={(e) => handleRuleChange(index, e.target.value)}
+                                        placeholder={`規則 ${index + 1} (例如：答錯時要播放提示音)`}
+                                        className="min-h-[80px]"
+                                    />
+                                    <button 
+                                        onClick={() => removeRule(index)}
+                                        className={`flex-none h-12 mt-1 p-3 rounded-xl transition-colors border border-transparent ${
+                                            theme === 'cyber'
+                                            ? 'text-red-400 hover:text-red-300 hover:bg-red-900/30 hover:border-red-500/50'
+                                            : 'text-red-500 hover:bg-red-50 hover:border-red-200'
+                                        }`}
+                                        disabled={formData.rules.length === 1}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <button 
+                            onClick={addRule}
+                            className={`mt-3 text-sm font-bold flex items-center px-4 py-2 rounded-lg border border-transparent transition-all ${
+                                theme === 'cyber'
+                                ? 'text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/30 hover:border-cyan-500/50'
+                                : 'text-blue-600 hover:bg-blue-50 hover:border-blue-200'
+                            }`}
+                        >
+                            + 新增一條規則
+                        </button>
+                    </div>
+
+                    {/* New Technical Features Section */}
+                    <div>
+                        <Label theme={theme}>技術功能設定 (Technical Features)</Label>
+                        <div className={`p-4 rounded-xl border ${
+                            theme === 'cyber' 
+                            ? 'border-slate-700 bg-slate-800/30' 
+                            : 'border-slate-200 bg-slate-50'
+                        }`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${
+                                        theme === 'cyber' ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-600'
+                                    }`}>
+                                        <Accessibility size={20} />
+                                    </div>
+                                    <div>
+                                        <div className={`font-bold text-sm ${theme === 'cyber' ? 'text-slate-200' : 'text-slate-800'}`}>加入偏好設定模組</div>
+                                        <div className={`text-xs ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>包含字體大小 (6級) 與 語音速度 (6級) 調整功能</div>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={togglePreferenceSettings}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                                        formData.includePreferenceSettings 
+                                        ? (theme === 'cyber' ? 'bg-cyan-500' : 'bg-blue-600') 
+                                        : (theme === 'cyber' ? 'bg-slate-700' : 'bg-slate-300')
+                                    }`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                        formData.includePreferenceSettings ? 'translate-x-6' : 'translate-x-1'
+                                    }`} />
+                                </button>
+                            </div>
+                            
+                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${
+                                        theme === 'cyber' ? 'bg-purple-900/50 text-purple-400' : 'bg-purple-100 text-purple-600'
+                                    }`}>
+                                        <Code size={20} />
+                                    </div>
+                                    <div>
+                                        <div className={`font-bold text-sm ${theme === 'cyber' ? 'text-slate-200' : 'text-slate-800'}`}>是否生成 Gemini 指令</div>
+                                        <div className={`text-xs ${theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'}`}>若開啟，將包含「請生成一個完整的單一 HTML 檔案...」指令</div>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={toggleIsGemini}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                                        formData.isGemini 
+                                        ? (theme === 'cyber' ? 'bg-purple-500' : 'bg-purple-600') 
+                                        : (theme === 'cyber' ? 'bg-slate-700' : 'bg-slate-300')
+                                    }`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                        formData.isGemini ? 'translate-x-6' : 'translate-x-1'
+                                    }`} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            );
+
+            const renderStep4 = () => (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
+                    <div className={`border p-6 rounded-2xl flex items-start gap-4 ${
+                        theme === 'cyber'
+                        ? 'bg-slate-900/50 border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
+                        : 'bg-white border-blue-200 shadow-md'
+                    }`}>
+                        <div className={`p-3 rounded-full shadow-sm ${
+                            theme === 'cyber'
+                            ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/50'
+                            : 'bg-blue-100 text-blue-600'
+                        }`}>
+                            <Sparkles size={24} />
+                        </div>
+                        <div>
+                            <h3 className={`text-lg font-bold ${
+                                theme === 'cyber' ? 'text-cyan-100 orbitron tracking-wide' : 'text-slate-800'
+                            }`}>提詞已生成！</h3>
+                            <div className={`text-sm mt-2 space-y-1 ${
+                                theme === 'cyber' ? 'text-cyan-200/80' : 'text-slate-600'
+                            }`}>
+                                <p>1. 請點擊下方按鈕複製 PART 1 設計與邏輯，然後貼給 AI 進行構思。</p>
+                                <p>2. 待 AI 回應後，請複製 PART 2 技術與執行讓 AI 生成 MVP 專案（最小可行產品）。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[600px]">
+                        {/* Left Side: Design Prompt */}
+                        <div className="flex flex-col h-full">
+                            <div className={`flex items-center justify-between mb-2 ${theme === 'cyber' ? 'text-cyan-300' : 'text-slate-700'}`}>
+                                <span className="text-sm font-bold orbitron">Part 1: 設計與邏輯</span>
+                                <button 
+                                    onClick={handleCopyDesign}
+                                    className={`px-3 py-1 rounded-lg flex items-center gap-2 text-xs font-bold transition-all border shadow-sm ${
+                                        theme === 'cyber'
+                                        ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400'
+                                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                    }`}
+                                >
+                                    {copiedDesign ? <CheckCircle size={14} className="text-green-500" /> : <Copy size={14} />}
+                                    {copiedDesign ? "已複製" : "複製 Part 1"}
+                                </button>
+                            </div>
+                            <textarea 
+                                readOnly
+                                value={generateDesignPrompt()}
+                                className={`flex-1 w-full font-mono text-xs p-4 rounded-xl outline-none resize-none leading-relaxed border shadow-inner ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-950 text-cyan-300 border-slate-800'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                            />
+                        </div>
+
+                        {/* Right Side: Technical Prompt */}
+                        <div className="flex flex-col h-full">
+                            <div className={`flex items-center justify-between mb-2 ${theme === 'cyber' ? 'text-purple-300' : 'text-slate-700'}`}>
+                                <span className="text-sm font-bold orbitron">Part 2: 技術與執行</span>
+                                <button 
+                                    onClick={handleCopyTech}
+                                    className={`px-3 py-1 rounded-lg flex items-center gap-2 text-xs font-bold transition-all border shadow-sm ${
+                                        theme === 'cyber'
+                                        ? 'bg-slate-800/80 hover:bg-slate-700/80 text-purple-400 backdrop-blur-md border-purple-500/30 hover:border-purple-400'
+                                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                    }`}
+                                >
+                                    {copiedTech ? <CheckCircle size={14} className="text-green-500" /> : <Copy size={14} />}
+                                    {copiedTech ? "已複製" : "複製 Part 2"}
+                                </button>
+                            </div>
+                            <textarea 
+                                readOnly
+                                value={generateTechPrompt()}
+                                className={`flex-1 w-full font-mono text-xs p-4 rounded-xl outline-none resize-none leading-relaxed border shadow-inner ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-950 text-purple-300 border-slate-800'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200'
+                                }`}
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 mt-4">
+                             <button 
+                                onClick={handleSaveJSON}
+                                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                }`}
+                                title="儲存為 JSON 檔案"
+                            >
+                                <FileJson size={16} />
+                                <span className="hidden sm:inline">JSON</span>
+                            </button>
+                            <button 
+                                onClick={handleExportDOCX}
+                                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+                                    : 'bg-white hover:bg-slate-700 border-slate-200 hover:border-slate-300'
+                                }`}
+                                title="匯出為 DOCX 檔案"
+                            >
+                                <FileText size={16} />
+                                <span className="hidden sm:inline">DOCX</span>
+                            </button>
+                            <button 
+                                onClick={() => setStep(3)} // Return to step 3
+                                className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-all border shadow-sm ${
+                                    theme === 'cyber'
+                                    ? 'bg-slate-800/80 hover:bg-slate-700/80 text-cyan-400 backdrop-blur-md border-cyan-500/30 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                }`}
+                                title="返回上一步 (Step 3)"
+                            >
+                                <ChevronLeft size={16} />
+                                <span className="hidden sm:inline">上一步</span>
+                            </button>
+                    </div>
+                </motion.div>
+            );
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 relative z-10 transition-colors duration-500">
+                    <div className="max-w-6xl mx-auto pb-20"> {/* Increased width for dual columns */}
+                        
+                        {/* Header */}
+                        <header className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-start justify-between gap-4 relative">
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-black flex items-start gap-3 justify-center md:justify-start">
+                                    <span className={`text-4xl ${theme === 'cyber' ? 'filter drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]' : ''}`}>🤖</span>
+                                    <div className="flex flex-col">
+                                        <span className={`font-black tracking-wide text-xl md:text-2xl ${
+                                            theme === 'cyber' 
+                                            ? 'bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 drop-shadow-sm text-glow-cyan'
+                                            : 'text-slate-900'
+                                        }`}>
+                                            WMC TDA 教學設計輔助工具提詞器
+                                        </span>
+                                        <span className={`tracking-wider text-lg md:text-xl font-bold mt-1 ${
+                                            theme === 'cyber'
+                                            ? "font-['Orbitron'] bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 drop-shadow-sm"
+                                            : 'text-slate-600'
+                                        }`}>
+                                            Teaching Design Aids Prompt Builder
+                                        </span>
+                                    </div>
+                                </h1>
+                                <p className={`mt-3 font-medium pl-0 md:pl-[3.5rem] flex items-center gap-2 ${
+                                    theme === 'cyber' ? 'text-slate-400' : 'text-slate-500'
+                                }`}>
+                                    <Zap size={16} className="text-yellow-400" />
+                                    3 分鐘設計專屬教材：輸入需求，自動生成工程師級的開發指令。
+                                </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                                <button 
+                                    onClick={toggleTheme}
+                                    className={`p-2 rounded-full transition-all duration-300 ${
+                                        theme === 'cyber' 
+                                        ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700 border border-slate-700' 
+                                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 shadow-sm'
+                                    }`}
+                                    title={theme === 'cyber' ? "切換至簡潔模式" : "切換至科技模式"}
+                                >
+                                    {theme === 'cyber' ? <Sun size={20} /> : <Moon size={20} />}
+                                </button>
+                                <div className={`hidden md:flex px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 tracking-wider ${
+                                    theme === 'cyber'
+                                    ? 'border border-cyan-500/50 bg-cyan-950/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)] orbitron'
+                                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                }`}>
+                                    <Bot size={16} />
+                                    v1.1
+                                </div>
+                                <button 
+                                    onClick={triggerFileInput}
+                                    className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 tracking-wider transition-all ${
+                                        theme === 'cyber'
+                                        ? 'border border-emerald-500/50 bg-emerald-950/30 text-emerald-400 hover:bg-emerald-900/50 shadow-[0_0_10px_rgba(16,185,129,0.2)] orbitron'
+                                        : 'bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200'
+                                    }`}
+                                    title="匯入 JSON 設定檔"
+                                >
+                                    <Upload size={16} />
+                                    匯入 JSON
+                                </button>
+                                {/* Hidden File Input */}
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={handleImportJSON} 
+                                    accept=".json" 
+                                    className="hidden" 
+                                />
+                            </div>
+                        </header>
+
+                        {/* Progress Bar */}
+                        <div className="mb-8 max-w-3xl mx-auto">
+                            <div className={`flex justify-between text-xs font-bold mb-2 uppercase tracking-wider ${theme === 'cyber' ? 'orbitron text-slate-500' : 'text-slate-400'}`}>
+                                <span className={step >= 1 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>基本資料</span>
+                                <span className={step >= 2 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>內容情境</span>
+                                <span className={step >= 3 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>規則設定</span>
+                                <span className={step >= 4 ? (theme === 'cyber' ? "text-cyan-400 text-glow-cyan" : "text-blue-600") : ""}>完成生成</span>
+                            </div>
+                            <div className={`h-2 rounded-full overflow-hidden ${theme === 'cyber' ? 'bg-slate-800 border border-slate-700/50' : 'bg-slate-200'}`}>
+                                <motion.div 
+                                    className={`h-full ${
+                                        theme === 'cyber' 
+                                        ? 'bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]'
+                                        : 'bg-blue-600'
+                                    }`}
+                                    initial={{ width: "0%" }}
+                                    animate={{ width: `${(step / 4) * 100}%` }}
+                                    transition={{ duration: 0.3 }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Wizard Card - Adjust width for steps */}
+                        {step < 4 && (
+                            <Card theme={theme} className="min-h-[500px] flex flex-col max-w-3xl mx-auto">
+                                <div className="p-6 md:p-8 flex-1">
+                                    <AnimatePresence mode="wait">
+                                        {step === 1 && renderStep1()}
+                                        {step === 2 && renderStep2()}
+                                        {step === 3 && renderStep3()}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Footer Controls */}
+                                <div className={`p-6 flex justify-between items-center backdrop-blur-sm border-t ${
+                                    theme === 'cyber' ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-100'
+                                }`}>
+                                    {/* Left Side: Previous Button */}
+                                    <div className="w-1/3 flex justify-start">
+                                        {step > 1 && (
+                                            <button 
+                                                onClick={() => setStep(step - 1)}
+                                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+                                                    theme === 'cyber'
+                                                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                                    : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
+                                                }`}
+                                            >
+                                                <ChevronLeft size={20} />
+                                                上一步
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Center: Spacer */}
+                                    <div className="w-1/3 flex justify-center">
+                                    </div>
+
+                                    {/* Right Side: Next Button */}
+                                    <div className="w-1/3 flex justify-end">
+                                        <button 
+                                            onClick={handleNext}
+                                            className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 group text-white ${
+                                                theme === 'cyber'
+                                                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                                                : 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                                            }`}
+                                        >
+                                            下一步
+                                            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+                        
+                        {/* Step 4 Rendering (Wide Layout) */}
+                        {step === 4 && renderStep4()}
+
+
+                        {/* Extra Links Above Footer */}
+                        <div className="mt-12 flex flex-wrap justify-center gap-4">
+                            {/* Base44 Link */}
+                            <a href="https://base44.com/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
+                                theme === 'cyber'
+                                ? 'border-cyan-500/30 bg-cyan-900/20 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-100'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 shadow-sm'
+                            }`}>
+                                Base44 <ExternalLink size={14} />
+                            </a>
+                            
+                            {/* Emergent Link */}
+                            <a href="https://app.emergent.sh/home" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
+                                theme === 'cyber'
+                                ? 'border-purple-500/30 bg-purple-900/20 text-purple-300 hover:bg-purple-500/20 hover:text-purple-100'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-purple-600 shadow-sm'
+                            }`}>
+                                Emergent <ExternalLink size={14} />
+                            </a>
+                            
+                            {/* v0.app Link */}
+                            <a href="https://v0.app/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
+                                theme === 'cyber'
+                                ? 'border-slate-500/30 bg-slate-800/20 text-slate-300 hover:bg-slate-700/40 hover:text-slate-100'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm'
+                            }`}>
+                                v0.app <ExternalLink size={14} />
+                            </a>
+                            
+                            {/* Gemini Link */}
+                            <a href="https://gemini.google.com/gem/brainstormer" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
+                                theme === 'cyber'
+                                ? 'border-blue-500/30 bg-blue-900/20 text-blue-300 hover:bg-blue-500/20 hover:text-blue-100'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 shadow-sm'
+                            }`}>
+                                Gemini <ExternalLink size={14} />
+                            </a>
+
+                            {/* Lovable Link */}
+                            <a href="https://lovable.dev/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
+                                theme === 'cyber'
+                                ? 'border-pink-500/30 bg-pink-900/20 text-pink-300 hover:bg-pink-500/20 hover:text-pink-100'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-pink-600 shadow-sm'
+                            }`}>
+                                Lovable (不能分享) <ExternalLink size={14} />
+                            </a>
+
+                            {/* GitHub Link */}
+                            <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium flex items-center gap-2 ${
+                                theme === 'cyber'
+                                ? 'border-zinc-500/30 bg-zinc-900/20 text-zinc-300 hover:bg-zinc-500/20 hover:text-zinc-100'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-black shadow-sm'
+                            }`}>
+                                GitHub <Github size={14} />
+                            </a>
+                        </div>
+
+                        {/* Footer */}
+                        <footer className={`mt-6 py-6 text-center text-xs font-medium tracking-widest ${
+                            theme === 'cyber' ? 'text-slate-600 orbitron' : 'text-slate-400'
+                        }`}>
+                            © 2025 WMC designed by Ken Cheng | Created with Gemini Script & Tailwind CSS
+                        </footer>
+
+                        {/* Floating Action Button (FAB) */}
+                        <div className="fixed bottom-6 right-6 z-50">
+                            <a 
+                                href="https://chengky-bot.github.io/kencheng-homepage/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-md transition-all hover:scale-105 group ${
+                                theme === 'cyber'
+                                ? 'border-white/20 bg-gradient-to-r from-cyan-600/80 via-blue-600/80 to-purple-600/80 animate-holo text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:shadow-[0_0_25px_rgba(6,182,212,0.8)]'
+                                : 'bg-white border-slate-200 text-slate-700 shadow-lg hover:shadow-xl'
+                            }`}>
+                                <Monitor size={20} className={theme === 'cyber' ? "group-hover:animate-pulse" : ""} />
+                                <span className="font-bold text-sm tracking-wide text-shadow-sm">Ken Cheng設計</span>
+                                <img src="https://i.imgur.com/OQwyeIV.png" alt="Ken Cheng Signature" className="h-6 w-auto ml-1" />
+                            </a>
+                        </div>
+
+                    </div>
                 </div>
             );
         }
